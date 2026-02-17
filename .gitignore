@@ -1,3 +1,6 @@
+.env.*
+/public/bundles/*
+
 # Cache and logs (Symfony2)
 /app/cache/*
 /app/logs/*
@@ -30,18 +33,23 @@
 !bin/console
 !bin/symfony_requirements
 /vendor/
-
 # Assets and user uploads
 /web/bundles/
 /web/uploads/
 
-# PHPUnit
-/app/phpunit.xml
-/phpunit.xml
+###< symfony/framework-bundle ###
 
-# Build data
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
 /build/
 
+###< symfony/asset-mapper ###
 # Composer PHAR
 /composer.phar
 
