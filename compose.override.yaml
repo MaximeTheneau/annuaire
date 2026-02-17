@@ -1,0 +1,33 @@
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    ports:
+      - "3306"
+###< doctrine/doctrine-bundle ###
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    working_dir: /srv/app
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+    environment:
+      APP_ENV: dev
+    volumes:
+      - .:/srv/app:rw,cached
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+
+###> symfony/mailer ###
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025"
+      - "8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+###< symfony/mailer ###
