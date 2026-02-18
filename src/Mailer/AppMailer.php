@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Mailer;
+
+use App\Entity\SecurityToken;
+use App\Entity\User;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
+
+class AppMailer
+{
+    public function __construct(
+        private readonly MailerInterface $mailer,
+        private readonly RouterInterface $router
+    ) {
+    }
+
+    public function sendRegistrationConfirmation(User $user, SecurityToken $token): void
+    {
+        $url = $this->router->generate('app_register_confirm', ['token' => $token->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Confirmez votre compte professionnel')
+            ->htmlTemplate('emails/confirm_account.html.twig')
+            ->context([
+                'user' => $user,
+                'url' => $url,
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendTwoFactorCode(User $user, SecurityToken $token): void
+    {
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Votre code de connexion')
+            ->htmlTemplate('emails/two_factor.html.twig')
+            ->context([
+                'user' => $user,
+                'code' => $token->getToken(),
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendLoginConfirmation(User $user, SecurityToken $token): void
+    {
+        $url = $this->router->generate('app_confirm_login_verify', ['token' => $token->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Confirmez votre connexion')
+            ->htmlTemplate('emails/confirm_login.html.twig')
+            ->context([
+                'user' => $user,
+                'url' => $url,
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendPasswordReset(User $user, SecurityToken $token): void
+    {
+        $url = $this->router->generate('app_reset_password', ['token' => $token->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Réinitialisation de mot de passe')
+            ->htmlTemplate('emails/reset_password.html.twig')
+            ->context([
+                'user' => $user,
+                'url' => $url,
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendPasswordChangeConfirmation(User $user, SecurityToken $token): void
+    {
+        $url = $this->router->generate('app_change_password_confirm', ['token' => $token->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($user->getEmail())
+            ->subject('Confirmez le changement de mot de passe')
+            ->htmlTemplate('emails/confirm_password_change.html.twig')
+            ->context([
+                'user' => $user,
+                'url' => $url,
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+}

@@ -1,4 +1,5 @@
 .env.*
+/docker/.env
 /public/bundles/*
 
 # Cache and logs (Symfony2)

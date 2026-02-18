@@ -7,6 +7,12 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.confirm_email_ttl_minutes: '%env(int:APP_CONFIRM_EMAIL_TTL_MINUTES)%'
+    app.confirm_login_ttl_minutes: '%env(int:APP_CONFIRM_LOGIN_TTL_MINUTES)%'
+    app.two_factor_ttl_minutes: '%env(int:APP_TWO_FACTOR_TTL_MINUTES)%'
+    app.reset_password_ttl_minutes: '%env(int:APP_RESET_PASSWORD_TTL_MINUTES)%'
+    app.confirm_password_change_ttl_minutes: '%env(int:APP_CONFIRM_PASSWORD_CHANGE_TTL_MINUTES)%'
+    app.two_factor_cooldown_seconds: '%env(int:APP_TWO_FACTOR_COOLDOWN_SECONDS)%'
 
 services:
     # default configuration for services in *this* file

@@ -4,13 +4,13 @@ services:
   database:
     image: mysql:${MYSQL_VERSION:-8.0}
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       # You should definitely change the password in production
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-!ChangeMe!}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER:-app}
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${MYSQL_USER:-app}", "-p${MYSQL_PASSWORD:-!ChangeMe!}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
       timeout: 5s
       retries: 5
       start_period: 60s
@@ -22,11 +22,11 @@ services:
 
   php:
     build:
-      context: .
+      context: ..
       dockerfile: docker/php/Dockerfile.prod
     working_dir: /srv/app
     env_file:
-      - .env.prod
+      - ../.env.prod
     volumes:
       - app_var:/srv/app/var:rw
     depends_on:
@@ -36,7 +36,7 @@ services:
 
   nginx:
     build:
-      context: .
+      context: ..
       dockerfile: docker/nginx/Dockerfile
     depends_on:
       - php

@@ -8,14 +8,14 @@ services:
 
   app:
     build:
-      context: .
+      context: ..
       dockerfile: docker/php/Dockerfile
     working_dir: /srv/app
     command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
     environment:
       APP_ENV: dev
     volumes:
-      - .:/srv/app:rw,cached
+      - ..:/srv/app:rw,cached
     ports:
       - "8000:8000"
     depends_on:
