@@ -13,7 +13,7 @@ class Address extends BaseEntity
     #[ORM\Column(length: 255)]
     private string $formatted = '';
 
-    #[ORM\Column(length: 64)]
+    #[ORM\Column(length: 255)]
     private string $googlePlaceId = '';
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 7, nullable: true)]

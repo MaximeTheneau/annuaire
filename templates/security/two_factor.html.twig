@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation 2FA{% endblock %}
+
+{% block body %}
+    <h1>Validation 2FA</h1>
+    <p>Un code a été envoyé par email.</p>
+
+    {{ form_start(form) }}
+        {{ form_row(form.code) }}
+        <button type="submit">Valider</button>
+    {{ form_end(form) }}
+
+    <p>
+        <a href="{{ path('app_two_factor_resend') }}">Renvoyer un code</a>
+    </p>
+{% endblock %}

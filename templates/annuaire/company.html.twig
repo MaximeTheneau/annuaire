@@ -1,0 +1,65 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block hero_title %}{{ company.name }}{% endblock %}
+{% block hero_subtitle %}Fiche professionnelle{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb">
+        <a href="{{ path('app_annuaire_index') }}">Annuaire</a>
+        <span>•</span>
+        <a href="{{ path('app_annuaire_department', { departmentSlug: department.slug }) }}">{{ department.name }}</a>
+        <span>•</span>
+        <a href="{{ path('app_annuaire_city', { departmentSlug: department.slug, citySlug: city.slug }) }}">{{ city.name }}</a>
+        <span>•</span>
+        <span>{{ company.name }}</span>
+    </div>
+
+    {% if company.address and company.address.lat and company.address.lng %}
+        {% set markers = [{
+            name: company.name,
+            lat: company.address.lat,
+            lng: company.address.lng
+        }] %}
+        <div class="map-card" style="margin: 20px 0;">
+            <div
+                class="map"
+                data-controller="map"
+                data-map-api-key-value="{{ google_places_api_key|e('js') }}"
+                data-map-markers-value='{{ markers|json_encode|raw }}'
+            ></div>
+        </div>
+    {% else %}
+        <div class="map-card" style="margin: 20px 0;">
+            <div class="map-note">Aucune position disponible pour afficher la carte.</div>
+        </div>
+    {% endif %}
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <h4>Adresse</h4>
+            <p class="muted">{{ company.address.formatted }}</p>
+            <p class="muted">{{ city.name }}, {{ department.code }}</p>
+        </div>
+        <div class="detail-card">
+            <h4>Contact</h4>
+            <p class="muted">Téléphone: {{ company.phone }}</p>
+            {% if company.website %}
+                <p><a class="link" href="{{ company.website }}" target="_blank" rel="noopener">Visiter le site</a></p>
+            {% endif %}
+        </div>
+        <div class="detail-card">
+            <h4>Informations</h4>
+            {% if company.category %}
+                <p class="muted">Catégorie: {{ company.category.name }}</p>
+            {% endif %}
+            <p class="muted">SIRET: {{ company.siret|siret_format }}</p>
+        </div>
+    </div>
+
+    {% if company.description %}
+        <div class="detail-card" style="margin-top: 20px;">
+            <h4>Description</h4>
+            <p class="muted">{{ company.description }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

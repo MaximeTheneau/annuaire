@@ -1,0 +1,105 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block title %}Annuaire Pro{% endblock %}
+
+{% block body %}
+    <form method="get" action="{{ path('app_annuaire_index') }}">
+        <div class="card" style="display:flex; gap:12px; align-items:center;">
+            <input type="text" name="q" value="{{ query }}" placeholder="Rechercher une ville ou un pro..." style="flex:1;">
+            <button type="submit" class="cta">Rechercher</button>
+        </div>
+    </form>
+
+    {% if query %}
+        <div class="section-title">
+            <h2>Résultats pour “{{ query }}”</h2>
+            <span class="pill">{{ companies|length + cities|length }} résultats</span>
+        </div>
+
+        <div class="section-title">
+            <h2>Villes</h2>
+        </div>
+        <div class="card-grid">
+            {% for city in cities %}
+                <a class="card" href="{{ path('app_annuaire_city', { departmentSlug: city.department.slug, citySlug: city.slug }) }}">
+                    <h3>{{ city.name }}</h3>
+                    <p class="muted">{{ city.department.name }} ({{ city.department.code }})</p>
+                </a>
+            {% else %}
+                <div class="empty">Aucune ville trouvée.</div>
+            {% endfor %}
+        </div>
+
+        <div class="section-title">
+            <h2>Professionnels</h2>
+        </div>
+        <div class="card-grid">
+            {% for company in companies %}
+                <a class="card" href="{{ path('app_annuaire_company', { departmentSlug: company.address.city.department.slug, citySlug: company.address.city.slug, companySlug: company.slug }) }}">
+                    <h3>{{ company.name }}</h3>
+                    {% if company.category %}
+                        <span class="pill">{{ company.category.name }}</span>
+                    {% endif %}
+                    <p class="muted">{{ company.address.formatted }}</p>
+                </a>
+            {% else %}
+                <div class="empty">Aucun professionnel trouvé.</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% set mapMarkers = [] %}
+    {% for company in companies %}
+        {% if company.address and company.address.lat and company.address.lng %}
+            {% set mapMarkers = mapMarkers|merge([{
+                name: company.name,
+                lat: company.address.lat,
+                lng: company.address.lng,
+                url: path('app_annuaire_company', { departmentSlug: company.address.city.department.slug, citySlug: company.address.city.slug, companySlug: company.slug })
+            }]) %}
+        {% endif %}
+    {% endfor %}
+
+    <div class="map-card" style="margin: 20px 0;">
+        <div
+            class="map"
+            data-controller="map"
+            data-map-api-key-value="{{ google_places_api_key|e('js') }}"
+            data-map-markers-value='{{ mapMarkers|json_encode|raw }}'
+            data-map-center-value='{"lat":46.2276,"lng":2.2137}'
+            data-map-zoom-value="5"
+        ></div>
+    </div>
+
+    <div class="section-title">
+        <h2>Départements</h2>
+        <span class="pill">{{ departments|length }} disponibles</span>
+    </div>
+    <div class="card-grid">
+        {% for department in departments %}
+            <a class="card" href="{{ path('app_annuaire_department', { departmentSlug: department.slug }) }}">
+                <h3>{{ department.name }}</h3>
+                <p class="muted">Département {{ department.code }}</p>
+                <span class="link">Voir les villes →</span>
+            </a>
+        {% else %}
+            <div class="empty">Aucun département disponible.</div>
+        {% endfor %}
+    </div>
+
+    <div class="section-title">
+        <h2>Catégories</h2>
+        <span class="pill">{{ categories|length }} catégories</span>
+    </div>
+    <div class="card-grid">
+        {% for category in categories %}
+            <a class="card" href="{{ path('app_annuaire_category', { categorySlug: category.slug }) }}">
+                <h3>{{ category.name }}</h3>
+                <p class="muted">Explorez les pros de cette catégorie.</p>
+                <span class="link">Voir les pros →</span>
+            </a>
+        {% else %}
+            <div class="empty">Aucune catégorie disponible.</div>
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon entreprise{% endblock %}
+
+{% block body %}
+    <h1>Mon entreprise</h1>
+
+    {% if company %}
+        <p><strong>Nom:</strong> {{ company.name }}</p>
+        <p><strong>SIRET:</strong> {{ company.siret|siret_format }}</p>
+        {% if company.address %}
+            <p><strong>Adresse:</strong> {{ company.address.formatted }}</p>
+            <p><strong>Ville:</strong> {{ company.address.city.name }}</p>
+            <p><strong>Département:</strong> {{ company.address.city.department.name }} ({{ company.address.city.department.code }})</p>
+        {% endif %}
+        <p><strong>Téléphone:</strong> {{ company.phone }}</p>
+        {% if company.category %}
+            <p><strong>Catégorie:</strong> {{ company.category.name }}</p>
+        {% endif %}
+        {% if company.website %}
+            <p><strong>Site web:</strong> <a href="{{ company.website }}" target="_blank" rel="noopener">Voir</a></p>
+        {% endif %}
+        {% if company.description %}
+            <p><strong>Description:</strong> {{ company.description }}</p>
+        {% endif %}
+    {% else %}
+        <p>Aucune entreprise associée.</p>
+    {% endif %}
+
+    <p><a href="{{ path('app_change_password') }}">Changer le mot de passe</a></p>
+    <p><a href="{{ path('app_logout') }}">Se déconnecter</a></p>
+{% endblock %}

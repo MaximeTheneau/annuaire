@@ -1,0 +1,20 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block hero_title %}{{ city.name }}{% endblock %}
+{% block hero_subtitle %}Aucune entreprise trouvée pour le moment.{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb">
+        <a href="{{ path('app_annuaire_index') }}">Annuaire</a>
+        <span>•</span>
+        <a href="{{ path('app_annuaire_department', { departmentSlug: department.slug }) }}">{{ department.name }}</a>
+        <span>•</span>
+        <span>{{ city.name }}</span>
+    </div>
+
+    <div class="empty">
+        <h3>Pas encore de pros ici</h3>
+        <p class="muted">Soyez le premier à référencer une entreprise dans cette ville.</p>
+        <a class="cta" href="{{ path('app_register_pro') }}">Inscrire une entreprise</a>
+    </div>
+{% endblock %}

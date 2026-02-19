@@ -52,6 +52,7 @@ class RegistrationController extends AbstractController
                 'choice_label' => 'name',
                 'placeholder' => 'Choisir une catégorie',
                 'required' => false,
+                'empty_data' => null,
             ])
             ->add('company_name', TextType::class, [
                 'label' => 'Nom de l\'entreprise',
@@ -117,24 +118,14 @@ class RegistrationController extends AbstractController
                 $this->addFlash('error', 'Une entreprise avec ce nom existe déjà.');
                 return $this->redirectToRoute('app_register_pro');
             }
-
-            $departmentCode = strtoupper(trim((string) $data['department_code']));
             $departmentName = trim((string) $data['department_name']);
             $cityName = trim((string) $data['city_name']);
             $placeId = trim((string) $data['place_id']);
-
-            if ($departmentCode === '' || $cityName === '' || $placeId === '') {
+            if ( $cityName === '' || $placeId === '') {
                 $this->addFlash('error', 'Adresse invalide. Merci de sélectionner une adresse dans la liste.');
                 return $this->redirectToRoute('app_register_pro');
             }
-
-            $department = $entityManager->getRepository(Department::class)->findOneBy(['code' => $departmentCode]);
-            if (!$department instanceof Department) {
-                $department = (new Department())
-                    ->setCode($departmentCode)
-                    ->setName($departmentName !== '' ? $departmentName : $departmentCode);
-                $entityManager->persist($department);
-            }
+            $department = $entityManager->getRepository(Department::class)->findOneBy(['name' => $departmentName]);
 
             $city = $entityManager->getRepository(City::class)->findOneBy([
                 'name' => $cityName,

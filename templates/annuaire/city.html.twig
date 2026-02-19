@@ -1,0 +1,56 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block hero_title %}{{ city.name }}{% endblock %}
+{% block hero_subtitle %}Les pros disponibles dans votre ville.{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb">
+        <a href="{{ path('app_annuaire_index') }}">Annuaire</a>
+        <span>•</span>
+        <a href="{{ path('app_annuaire_department', { departmentSlug: department.slug }) }}">{{ department.name }}</a>
+        <span>•</span>
+        <span>{{ city.name }}</span>
+    </div>
+
+    {% set markers = [] %}
+    {% for company in companies %}
+        {% if company.address and company.address.lat and company.address.lng %}
+            {% set markers = markers|merge([{
+                name: company.name,
+                lat: company.address.lat,
+                lng: company.address.lng,
+                url: path('app_annuaire_company', { departmentSlug: department.slug, citySlug: city.slug, companySlug: company.slug })
+            }]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% if markers|length > 0 %}
+        <div class="map-card" style="margin: 20px 0;">
+            <div
+                class="map"
+                data-controller="map"
+                data-map-api-key-value="{{ google_places_api_key|e('js') }}"
+                data-map-markers-value='{{ markers|json_encode|raw }}'
+            ></div>
+        </div>
+    {% else %}
+        <div class="map-card" style="margin: 20px 0;">
+            <div class="map-note">Aucune position disponible pour afficher la carte.</div>
+        </div>
+    {% endif %}
+
+    <div class="card-grid">
+        {% for company in companies %}
+            <a class="card" href="{{ path('app_annuaire_company', { departmentSlug: department.slug, citySlug: city.slug, companySlug: company.slug }) }}">
+                <h3>{{ company.name }}</h3>
+                {% if company.category %}
+                    <span class="pill">{{ company.category.name }}</span>
+                {% endif %}
+                <p class="muted">{{ company.address.formatted }}</p>
+                <span class="link">Voir la fiche →</span>
+            </a>
+        {% else %}
+            <div class="empty">Aucune entreprise disponible.</div>
+        {% endfor %}
+    </div>
+{% endblock %}

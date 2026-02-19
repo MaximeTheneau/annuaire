@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\City;
+use App\Entity\Category;
 use App\Entity\Department;
 use App\Repository\CategoryRepository;
 use App\Repository\CityRepository;
@@ -37,6 +38,100 @@ class AnnuaireController extends AbstractController
             'query' => $query,
             'companies' => $companies,
             'cities' => $cities,
+        ]);
+    }
+
+    #[Route('/annuaire-pro/categorie/{categorySlug}', name: 'app_annuaire_category')]
+    public function category(
+        string $categorySlug,
+        CategoryRepository $categoryRepository,
+        CompanyRepository $companyRepository,
+        DepartmentRepository $departmentRepository
+    ): Response {
+        $category = $categoryRepository->findOneBy(['slug' => $categorySlug]);
+        if (!$category instanceof Category) {
+            throw $this->createNotFoundException();
+        }
+
+        $companies = $companyRepository->findByCategory($category);
+
+        return $this->render('annuaire/category.html.twig', [
+            'category' => $category,
+            'companies' => $companies,
+            'departments' => $departmentRepository->findBy([], ['code' => 'ASC']),
+            'department' => null,
+            'cities' => [],
+            'city' => null,
+        ]);
+    }
+
+    #[Route('/annuaire-pro/categorie/{categorySlug}/{departmentSlug}', name: 'app_annuaire_category_department')]
+    public function categoryDepartment(
+        string $categorySlug,
+        string $departmentSlug,
+        CategoryRepository $categoryRepository,
+        DepartmentRepository $departmentRepository,
+        CityRepository $cityRepository,
+        CompanyRepository $companyRepository
+    ): Response {
+        $category = $categoryRepository->findOneBy(['slug' => $categorySlug]);
+        if (!$category instanceof Category) {
+            throw $this->createNotFoundException();
+        }
+
+        $department = $departmentRepository->findOneBy(['slug' => $departmentSlug]);
+        if (!$department instanceof Department) {
+            throw $this->createNotFoundException();
+        }
+
+        $companies = $companyRepository->findByCategoryAndDepartment($category, $department);
+        $cities = $cityRepository->findBy(['department' => $department], ['name' => 'ASC']);
+
+        return $this->render('annuaire/category.html.twig', [
+            'category' => $category,
+            'companies' => $companies,
+            'departments' => $departmentRepository->findBy([], ['code' => 'ASC']),
+            'department' => $department,
+            'cities' => $cities,
+            'city' => null,
+        ]);
+    }
+
+    #[Route('/annuaire-pro/categorie/{categorySlug}/{departmentSlug}/{citySlug}', name: 'app_annuaire_category_city')]
+    public function categoryCity(
+        string $categorySlug,
+        string $departmentSlug,
+        string $citySlug,
+        CategoryRepository $categoryRepository,
+        DepartmentRepository $departmentRepository,
+        CityRepository $cityRepository,
+        CompanyRepository $companyRepository
+    ): Response {
+        $category = $categoryRepository->findOneBy(['slug' => $categorySlug]);
+        if (!$category instanceof Category) {
+            throw $this->createNotFoundException();
+        }
+
+        $department = $departmentRepository->findOneBy(['slug' => $departmentSlug]);
+        if (!$department instanceof Department) {
+            throw $this->createNotFoundException();
+        }
+
+        $city = $cityRepository->findOneBy(['slug' => $citySlug, 'department' => $department]);
+        if (!$city instanceof City) {
+            throw $this->createNotFoundException();
+        }
+
+        $companies = $companyRepository->findByCategoryAndCity($category, $city);
+        $cities = $cityRepository->findBy(['department' => $department], ['name' => 'ASC']);
+
+        return $this->render('annuaire/category.html.twig', [
+            'category' => $category,
+            'companies' => $companies,
+            'departments' => $departmentRepository->findBy([], ['code' => 'ASC']),
+            'department' => $department,
+            'cities' => $cities,
+            'city' => $city,
         ]);
     }
 

@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_department_slug', columns: ['slug'])]
 class Department extends BaseEntity
 {
-    #[ORM\Column(length: 3)]
+    #[ORM\Column(length: 5)]
     private string $code = '';
 
     public function getCode(): string

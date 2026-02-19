@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Company;
 use App\Entity\City;
+use App\Entity\Category;
 use App\Entity\Department;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,6 +27,58 @@ class CompanyRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->join('c.address', 'a')
             ->andWhere('a.city = :city')
+            ->setParameter('city', $city)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Company[]
+     */
+    public function findByCategory(Category $category): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.address', 'a')
+            ->join('a.city', 'city')
+            ->join('city.department', 'department')
+            ->andWhere('c.category = :category')
+            ->setParameter('category', $category)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Company[]
+     */
+    public function findByCategoryAndDepartment(Category $category, Department $department): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.address', 'a')
+            ->join('a.city', 'city')
+            ->join('city.department', 'department')
+            ->andWhere('c.category = :category')
+            ->andWhere('department = :department')
+            ->setParameter('category', $category)
+            ->setParameter('department', $department)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Company[]
+     */
+    public function findByCategoryAndCity(Category $category, City $city): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.address', 'a')
+            ->join('a.city', 'city')
+            ->join('city.department', 'department')
+            ->andWhere('c.category = :category')
+            ->andWhere('city = :city')
+            ->setParameter('category', $category)
             ->setParameter('city', $city)
             ->orderBy('c.name', 'ASC')
             ->getQuery()
