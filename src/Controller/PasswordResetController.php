@@ -56,7 +56,7 @@ class PasswordResetController extends AbstractController
 
         return $this->render('security/reset_request.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/mot-de-passe/reinitialiser/{token}', name: 'app_reset_password')]
@@ -85,11 +85,13 @@ class PasswordResetController extends AbstractController
             ])
             ->getForm();
 
+        $status = Response::HTTP_OK;
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             if ($data['password'] !== $data['confirm_password']) {
                 $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+                $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             } else {
                 $user = $securityToken->getUser();
                 $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
@@ -102,10 +104,12 @@ class PasswordResetController extends AbstractController
                 $this->addFlash('success', 'Mot de passe mis à jour. Vous pouvez vous connecter.');
                 return $this->redirectToRoute('app_login');
             }
+        } elseif ($form->isSubmitted()) {
+            $status = Response::HTTP_UNPROCESSABLE_ENTITY;
         }
 
         return $this->render('security/reset_password.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $status));
     }
 }

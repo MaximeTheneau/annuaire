@@ -70,7 +70,7 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 
         $this->completeLogin($user, $ip);
 
-        return new RedirectResponse($this->router->generate('app_pro_company'));
+        return new RedirectResponse($this->router->generate('pro_admin'));
     }
 
     private function requiresLoginConfirmation(User $user, string $ip): bool

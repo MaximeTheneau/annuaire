@@ -6,7 +6,6 @@ use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
@@ -24,8 +23,6 @@ class UserCrudController extends AbstractCrudController
         yield ArrayField::new('roles');
         yield BooleanField::new('isVerified', 'Vérifié');
         yield BooleanField::new('twoFactorEnabled', '2FA');
-        yield DateTimeField::new('createdAt')->onlyOnIndex();
-        yield DateTimeField::new('lastLoginAt')->onlyOnIndex();
         yield TextField::new('lastLoginIp')->onlyOnIndex();
     }
 }

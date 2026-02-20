@@ -178,6 +178,7 @@ class RegistrationController extends AbstractController
             );
 
             $mailer->sendRegistrationConfirmation($user, $token);
+            $mailer->sendNewCompanyNotification($company);
 
             $this->addFlash('success', 'Votre compte a été créé. Un email de confirmation vous a été envoyé.');
 
@@ -186,7 +187,7 @@ class RegistrationController extends AbstractController
 
         return $this->render('registration/register.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/verification/compte/{token}', name: 'app_register_confirm')]
@@ -215,11 +216,13 @@ class RegistrationController extends AbstractController
             ])
             ->getForm();
 
+        $status = Response::HTTP_OK;
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             if ($data['password'] !== $data['confirm_password']) {
                 $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+                $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             } else {
                 $user = $securityToken->getUser();
                 $user->setPassword($passwordHasher->hashPassword($user, $data['password']));
@@ -235,10 +238,12 @@ class RegistrationController extends AbstractController
 
                 return $this->redirectToRoute('app_login');
             }
+        } elseif ($form->isSubmitted()) {
+            $status = Response::HTTP_UNPROCESSABLE_ENTITY;
         }
 
         return $this->render('registration/set_password.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $status));
     }
 }

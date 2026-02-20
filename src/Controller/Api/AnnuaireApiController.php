@@ -51,7 +51,6 @@ class AnnuaireApiController extends AbstractController
             'companies' => array_map(fn (Company $c) => $this->serializeCompany($c), $companies),
             'cities' => array_map(fn (City $c) => $this->serializeCity($c), $cities),
         ]);
-        $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:3000');
 
         return $response;
     }

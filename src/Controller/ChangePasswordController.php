@@ -48,14 +48,17 @@ class ChangePasswordController extends AbstractController
             ])
             ->getForm();
 
+        $status = Response::HTTP_OK;
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
 
             if (!$passwordHasher->isPasswordValid($user, $data['current_password'])) {
                 $this->addFlash('error', 'Mot de passe actuel invalide.');
+                $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             } elseif ($data['new_password'] !== $data['confirm_password']) {
                 $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
+                $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             } else {
                 $newHash = $passwordHasher->hashPassword($user, $data['new_password']);
 
@@ -69,13 +72,15 @@ class ChangePasswordController extends AbstractController
                 $mailer->sendPasswordChangeConfirmation($user, $token);
                 $this->addFlash('success', 'Confirmez le changement via le lien envoyé par email.');
 
-                return $this->redirectToRoute('app_pro_company');
+                return $this->redirectToRoute('pro_admin');
             }
+        } elseif ($form->isSubmitted()) {
+            $status = Response::HTTP_UNPROCESSABLE_ENTITY;
         }
 
         return $this->render('security/change_password.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $status));
     }
 
     #[Route('/mot-de-passe/changer/confirm/{token}', name: 'app_change_password_confirm')]

@@ -3,12 +3,13 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[ORM\MappedSuperclass]
 abstract class BaseEntity
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'binary', length: 16, unique: true)]
+    #[ORM\Column(type: 'uuid_binary', length: 16, unique: true)]
     #[ORM\GeneratedValue(strategy: 'NONE')]
     protected ?string $id = null;
 
@@ -20,7 +21,8 @@ abstract class BaseEntity
 
     public function __construct()
     {
-        $this->id = \App\Util\Uuid::v4Bytes();
+        // Store as hex — UuidBinaryType converts to binary(16) on DB write
+        $this->id = bin2hex(\App\Util\Uuid::v4Bytes());
     }
 
     public function getId(): ?string
@@ -28,9 +30,13 @@ abstract class BaseEntity
         return $this->id;
     }
 
+    /**
+     * Returns the UUID as a 32-char hex string.
+     * With uuid_binary type, $this->id is already hex — no double-encoding needed.
+     */
     public function getIdHex(): string
     {
-        return $this->id ? \App\Util\Uuid::toHex($this->id) : '';
+        return $this->id ?? '';
     }
 
     public function getName(): ?string
@@ -65,14 +71,9 @@ abstract class BaseEntity
             return '';
         }
 
-        $normalized = $value;
-        if (function_exists('transliterator_transliterate')) {
-            $normalized = transliterator_transliterate('Any-Latin; Latin-ASCII;', $value);
-        }
+        $slugger = new AsciiSlugger('en_FR', ['en' => ['%' => 'percent', '€' => 'euro']]);
 
-        $normalized = strtolower($normalized);
-        $normalized = preg_replace('/[^a-z0-9]+/', '-', $normalized) ?? $normalized;
-        $normalized = trim($normalized, '-');
+        $normalized = $slugger->slug($value)->lower()->toString();
 
         return $normalized;
     }

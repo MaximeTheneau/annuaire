@@ -100,7 +100,8 @@ class CompanyRepository extends ServiceEntityRepository
         $counts = [];
         foreach ($rows as $row) {
             $binary = $row['cityId'];
-            $key = is_string($binary) ? bin2hex($binary) : (string) $binary;
+            // IDENTITY() may return raw binary(16) or the converted hex string depending on Doctrine hydration
+            $key = is_string($binary) && strlen($binary) === 16 ? bin2hex($binary) : (string) $binary;
             $counts[$key] = (int) $row['total'];
         }
 

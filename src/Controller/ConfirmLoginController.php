@@ -61,7 +61,7 @@ class ConfirmLoginController extends AbstractController
             $mailer->sendTwoFactorCode($user, $twoFactorToken);
 
             $session->set('two_factor_pending', true);
-            $session->set('two_factor_user_id', $user->getId());
+            $session->set('two_factor_user_email', $user->getEmail());
 
             $entityManager->persist($securityToken);
             $entityManager->flush();
@@ -80,6 +80,6 @@ class ConfirmLoginController extends AbstractController
         $entityManager->persist($securityToken);
         $entityManager->flush();
 
-        return $this->redirectToRoute('app_pro_company');
+        return $this->redirectToRoute('pro_admin');
     }
 }

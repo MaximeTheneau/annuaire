@@ -40,6 +40,9 @@ class Company extends BaseEntity
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(nullable: true)]
+    private ?bool $approved = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -159,5 +162,17 @@ class Company extends BaseEntity
     private function normalizeSiret(string $siret): string
     {
         return preg_replace('/\s+/', '', $siret) ?? $siret;
+    }
+
+    public function isApproved(): ?bool
+    {
+        return $this->approved;
+    }
+
+    public function setApproved(?bool $approved): static
+    {
+        $this->approved = $approved;
+
+        return $this;
     }
 }

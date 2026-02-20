@@ -37,6 +37,7 @@ class TwoFactorController extends AbstractController
             ])
             ->getForm();
 
+        $status = Response::HTTP_OK;
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $code = $form->get('code')->getData();
@@ -54,6 +55,7 @@ class TwoFactorController extends AbstractController
 
             if (!$token || $token->isExpired() || $token->isUsed()) {
                 $this->addFlash('error', 'Code invalide ou expiré.');
+                $status = Response::HTTP_UNPROCESSABLE_ENTITY;
             } else {
                 $token->setUsedAt(new \DateTimeImmutable());
                 $user = $token->getUser();
@@ -63,20 +65,25 @@ class TwoFactorController extends AbstractController
                 $user->setLastLoginAt(new \DateTimeImmutable());
                 $user->setLastLoginIp((string) $request->getClientIp());
                 $entityManager->persist($user);
-
                 $entityManager->persist($token);
                 $entityManager->flush();
 
                 $session->remove('two_factor_pending');
                 $session->remove('two_factor_user_email');
 
-                return $this->redirectToRoute('app_pro_company');
+                if (in_array('ROLE_PRO', $user->getRoles(), true)) {
+                    return $this->redirectToRoute('pro_admin');
+                }
+
+                return $this->redirectToRoute('app_login');
             }
+        } elseif ($form->isSubmitted()) {
+            $status = Response::HTTP_UNPROCESSABLE_ENTITY;
         }
 
         return $this->render('security/two_factor.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(null, $status));
     }
 
     #[Route('/2fa/renvoyer', name: 'app_two_factor_resend')]

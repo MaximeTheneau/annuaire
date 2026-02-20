@@ -2,6 +2,7 @@
 
 namespace App\Mailer;
 
+use App\Entity\Company;
 use App\Entity\SecurityToken;
 use App\Entity\User;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -13,7 +14,8 @@ class AppMailer
 {
     public function __construct(
         private readonly MailerInterface $mailer,
-        private readonly RouterInterface $router
+        private readonly RouterInterface $router,
+        private readonly string $adminEmail
     ) {
     }
 
@@ -78,6 +80,35 @@ class AppMailer
                 'user' => $user,
                 'url' => $url,
                 'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendNewCompanyNotification(Company $company): void
+    {
+        $adminUrl = $this->router->generate('admin', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($this->adminEmail)
+            ->subject('Nouvelle entreprise à approuver : ' . $company->getName())
+            ->htmlTemplate('emails/new_company_notification.html.twig')
+            ->context([
+                'company' => $company,
+                'adminUrl' => $adminUrl,
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    public function sendCompanyApproved(Company $company): void
+    {
+        $email = (new TemplatedEmail())
+            ->to($company->getOwner()->getEmail())
+            ->subject('Votre fiche a été approuvée !')
+            ->htmlTemplate('emails/company_approved.html.twig')
+            ->context([
+                'company' => $company,
             ]);
 
         $this->mailer->send($email);

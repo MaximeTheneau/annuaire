@@ -2,22 +2,25 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\Company;
-use App\Entity\User;
-use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use App\Controller\Admin\CategoryCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
+use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class DashboardController extends AbstractDashboardController
 {
+    public function __construct(
+        private readonly AdminUrlGenerator $adminUrlGenerator,
+    ) {}
+
     #[Route('/admin', name: 'admin')]
-    public function admin(AdminUrlGenerator $adminUrlGenerator): Response
+    public function index(): Response
     {
-        $url = $adminUrlGenerator
-            ->setController(UserCrudController::class)
+        $url = $this->adminUrlGenerator
+            ->setController(CompanyCrudController::class)
             ->generateUrl();
 
         return $this->redirect($url);
@@ -32,7 +35,8 @@ class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-home');
-        yield MenuItem::linkToCrud('Utilisateurs', 'fa fa-user', User::class);
-        yield MenuItem::linkToCrud('Entreprises', 'fa fa-building', Company::class);
+        yield MenuItem::linkTo(CompanyCrudController::class, 'Professionnels', 'fa fa-building');
+        yield MenuItem::linkTo(UserCrudController::class, 'Utilisateurs', 'fa fa-user');
+        yield MenuItem::linkTo(CategoryCrudController::class, 'Catégories', 'fa fa-tags');
     }
 }
