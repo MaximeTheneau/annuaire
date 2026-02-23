@@ -11,7 +11,7 @@ class DepartmentCityFixture extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $path = dirname(__DIR__, 2) . '/fixtures/departments_prefectures.csv';
+        $path = __DIR__ . '/data/departments_prefectures.csv';
         if (!is_file($path)) {
             return;
         }

@@ -13,7 +13,7 @@ class City extends BaseEntity
     #[ORM\Column(length: 5, nullable: true)]
     private ?string $inseeCode = null;
 
-    #[ORM\ManyToOne(targetEntity: Department::class)]
+    #[ORM\ManyToOne(targetEntity: Department::class, inversedBy: 'city')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Department $department = null;
 

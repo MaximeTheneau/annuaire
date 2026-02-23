@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\AddressRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AddressRepository::class)]
 #[ORM\Table(name: 'address')]
@@ -22,8 +23,9 @@ class Address extends BaseEntity
     #[ORM\Column(type: 'decimal', precision: 10, scale: 7, nullable: true)]
     private ?string $lng = null;
 
-    #[ORM\Column(length: 10, nullable: true)]
-    private ?string $postalCode = null;
+    #[Assert\NotBlank(message: 'Le code postal est obligatoire.')]
+    #[ORM\Column(length: 10)]
+    private string $postalCode = '';
 
     #[ORM\ManyToOne(targetEntity: City::class)]
     #[ORM\JoinColumn(nullable: false)]
@@ -78,12 +80,12 @@ class Address extends BaseEntity
         return $this;
     }
 
-    public function getPostalCode(): ?string
+    public function getPostalCode(): string
     {
         return $this->postalCode;
     }
 
-    public function setPostalCode(?string $postalCode): self
+    public function setPostalCode(string $postalCode): self
     {
         $this->postalCode = $postalCode;
 

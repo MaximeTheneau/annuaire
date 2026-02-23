@@ -4,12 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Company;
 use App\Entity\Category;
-use App\Entity\City;
-use App\Entity\Department;
-use App\Entity\Address;
 use App\Entity\SecurityToken;
 use App\Entity\User;
 use App\Mailer\AppMailer;
+use App\Service\AddressResolverService;
 use App\Service\SecurityTokenManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,6 +34,7 @@ class RegistrationController extends AbstractController
         EntityManagerInterface $entityManager,
         SecurityTokenManager $tokenManager,
         AppMailer $mailer,
+        AddressResolverService $addressResolver,
         ParameterBagInterface $params
     ): Response {
         $form = $this->createFormBuilder()
@@ -118,36 +117,27 @@ class RegistrationController extends AbstractController
                 $this->addFlash('error', 'Une entreprise avec ce nom existe déjà.');
                 return $this->redirectToRoute('app_register_pro');
             }
-            $departmentName = trim((string) $data['department_name']);
-            $cityName = trim((string) $data['city_name']);
             $placeId = trim((string) $data['place_id']);
-            if ( $cityName === '' || $placeId === '') {
+            $cityName = trim((string) $data['city_name']);
+            if ($cityName === '' || $placeId === '') {
                 $this->addFlash('error', 'Adresse invalide. Merci de sélectionner une adresse dans la liste.');
                 return $this->redirectToRoute('app_register_pro');
             }
-            $department = $entityManager->getRepository(Department::class)->findOneBy(['name' => $departmentName]);
 
-            $city = $entityManager->getRepository(City::class)->findOneBy([
-                'name' => $cityName,
-                'department' => $department,
-            ]);
-            if (!$city instanceof City) {
-                $city = (new City())
-                    ->setName($cityName)
-                    ->setDepartment($department);
-                $entityManager->persist($city);
-            }
+            $address = $addressResolver->resolve(
+                placeId:          $placeId,
+                formattedAddress: (string) $data['address'],
+                cityName:         $cityName,
+                departmentName:   trim((string) $data['department_name']),
+                departmentCode:   trim((string) $data['department_code']),
+                postalCode:       $data['postal_code'] ?: null,
+                lat:              $data['lat'] ?: null,
+                lng:              $data['lng'] ?: null,
+            );
 
-            $address = $entityManager->getRepository(Address::class)->findOneBy(['googlePlaceId' => $placeId]);
-            if (!$address instanceof Address) {
-                $address = (new Address())
-                    ->setFormatted((string) $data['address'])
-                    ->setGooglePlaceId($placeId)
-                    ->setLat($data['lat'] ?: null)
-                    ->setLng($data['lng'] ?: null)
-                    ->setPostalCode($data['postal_code'] ?: null)
-                    ->setCity($city);
-                $entityManager->persist($address);
+            if ($address === null) {
+                $this->addFlash('error', 'Adresse invalide. Merci de sélectionner une adresse dans la liste.');
+                return $this->redirectToRoute('app_register_pro');
             }
 
             $user = (new User())
@@ -163,8 +153,12 @@ class RegistrationController extends AbstractController
                 ->setWebsite($data['website'] ?: null)
                 ->setDescription($data['description'] ?: null)
                 ->setOwner($user)
-                ->setAddress($address)
-                ->setCategory($data['category'] ?? null);
+                ->setAddress($address);
+
+            $category = $data['category'] ?? null;
+            if ($category instanceof \App\Entity\Category) {
+                $company->addCategory($category);
+            }
             $user->setCompany($company);
 
             $entityManager->persist($user);

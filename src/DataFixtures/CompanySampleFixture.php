@@ -21,7 +21,7 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
 
     public function load(ObjectManager $manager): void
     {
-        $path = dirname(__DIR__, 2) . '/fixtures/companies_sample.csv';
+        $path = __DIR__ . '/data/companies_sample.csv';
         if (!is_file($path)) {
             return;
         }
@@ -90,7 +90,7 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
                     ->setGooglePlaceId($placeId !== '' ? $placeId : 'PLACE_' . $index)
                     ->setLat($lat !== '' ? $lat : null)
                     ->setLng($lng !== '' ? $lng : null)
-                    ->setPostalCode($postalCode !== '' ? $postalCode : null)
+                    ->setPostalCode($postalCode !== '' ? $postalCode : '')
                     ->setCity($city);
                 $manager->persist($address);
             }
@@ -120,11 +120,14 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
                 ->setName($name)
                 ->setSiret($siret !== '' ? $siret : '00000000000000')
                 ->setPhone($phone !== '' ? $phone : '0000000000')
-                ->setWebsite($website !== '' ? $website : null)
+                ->setWebsite($website !== '' ? $website : '')
                 ->setDescription($description !== '' ? $description : null)
                 ->setOwner($user)
-                ->setAddress($address)
-                ->setCategory($category);
+                ->setAddress($address);
+
+            if ($category !== null) {
+                $company->addCategory($category);
+            }
 
             $user->setCompany($company);
 

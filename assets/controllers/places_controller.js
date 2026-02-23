@@ -76,26 +76,45 @@ export default class extends Controller {
         components.postal_town?.long_name ||
         components.administrative_area_level_3?.long_name ||
         '';
-      const dept = components.administrative_area_level_2?.long_name || '';
+      const dept     = components.administrative_area_level_2?.long_name || '';
       const deptCode = components.administrative_area_level_2?.short_name || '';
-      const postal = components.postal_code?.long_name || '';
+      const postal   = components.postal_code?.long_name || '';
+      const lat      = place.geometry?.location?.lat?.() ?? '';
+      const lng      = place.geometry?.location?.lng?.() ?? '';
 
-      this.setField('place_id', place.place_id);
-      this.setField('lat', place.geometry?.location?.lat?.());
-      this.setField('lng', place.geometry?.location?.lng?.());
-      this.setField('postal_code', postal);
-      this.setField('city_name', city);
+      // Target-based (EasyAdmin & future forms)
+      this.setTarget('placeId',        place.place_id);
+      this.setTarget('lat',            lat);
+      this.setTarget('lng',            lng);
+      this.setTarget('postalCode',     postal);
+      this.setTarget('cityName',       city);
+      this.setTarget('departmentName', dept);
+      this.setTarget('departmentCode', deptCode);
+
+      // Name-based fallback (registration form — keeps backward compatibility)
+      this.setField('place_id',        place.place_id);
+      this.setField('lat',             lat);
+      this.setField('lng',             lng);
+      this.setField('postal_code',     postal);
+      this.setField('city_name',       city);
       this.setField('department_name', dept);
       this.setField('department_code', deptCode);
     });
   }
 
-  setField(name, value) {
-    const field = this.element.querySelector(`[name="form[${name}]"]`);
-    if (!field) {
-      return;
+  /** Set a field by data-places-target attribute. */
+  setTarget(target, value) {
+    const el = this.element.querySelector(`[data-places-target="${target}"]`);
+    if (el) {
+      el.value = value ?? '';
     }
+  }
 
-    field.value = value ?? '';
+  /** Set a field by its name ending (e.g. "form[place_id]"). */
+  setField(name, value) {
+    const el = this.element.querySelector(`[name$="[${name}]"]`);
+    if (el) {
+      el.value = value ?? '';
+    }
   }
 }

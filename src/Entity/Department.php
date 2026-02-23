@@ -14,6 +14,10 @@ class Department extends BaseEntity
     #[ORM\Column(length: 5)]
     private string $code = '';
 
+    #[ORM\ManyToOne(targetEntity: InterventionArea::class, inversedBy: 'department')]
+    #[ORM\JoinColumn(name: "intervention_area_id", referencedColumnName: "id", nullable: true)]
+    private ?InterventionArea $interventionArea = null;
+
     public function getCode(): string
     {
         return $this->code;
@@ -29,5 +33,17 @@ class Department extends BaseEntity
     public function __toString(): string
     {
         return $this->name ?? $this->code;
+    }
+
+    public function getInterventionArea(): ?InterventionArea
+    {
+        return $this->interventionArea;
+    }
+
+    public function setInterventionArea(?InterventionArea $interventionArea): static
+    {
+        $this->interventionArea = $interventionArea;
+
+        return $this;
     }
 }

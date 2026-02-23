@@ -1,5 +1,0 @@
-name;category;address;place_id;lat;lng;postal_code;city_name;department_code;department_name;siret;phone;website;description
-Boulangerie du Centre;Boulangerie;10 Rue de Paris, 75001 Paris;PLACE_PARIS_001;48.8624;2.3363;75001;Paris;75;Paris;12345678900011;0102030405;https://boulangerieducentre.example;Boulangerie artisanale au coeur de Paris.
-Garage Lumiere;Informatique;12 Avenue de Lyon, 69000 Lyon;PLACE_LYON_001;45.7600;4.8357;69000;Lyon;69;Rhone;23456789000022;0607080910;https://garagelumiere.example;Atelier de reparation informatique.
-Cabinet Dupont;Avocat;5 Cours de l'Intendance, 33000 Bordeaux;PLACE_BDX_001;44.8422;-0.5760;33000;Bordeaux;33;Gironde;34567890100033;0506070809;https://cabinetdupont.example;Conseil juridique pour PME.
-Studio Azur;Coiffure;20 Rue Sainte, 13001 Marseille;PLACE_MRS_001;43.2965;5.3698;13001;Marseille;13;Bouches-du-Rhone;45678901200044;0708091011;https://studioazur.example;Salon de coiffure et bien-etre.

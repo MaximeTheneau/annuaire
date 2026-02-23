@@ -10,24 +10,27 @@ class CategoryFixture extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $categories = [
-            'Boulangerie',
-            'Plomberie',
-            'Coiffure',
-            'Avocat',
-            'Informatique',
-            'Restaurant',
-            'Santé',
-        ];
+        $csv = new \SplFileObject(__DIR__ . '/data/categories.csv');
+        $csv->setFlags(\SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
 
-        foreach ($categories as $name) {
+        $header = null;
+        foreach ($csv as $row) {
+            if ($header === null) {
+                $header = $row; // skip header line
+                continue;
+            }
+
+            $name = trim($row[0] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
             $existing = $manager->getRepository(Category::class)->findOneBy(['name' => $name]);
             if ($existing instanceof Category) {
                 continue;
             }
 
-            $category = (new Category())->setName($name);
-            $manager->persist($category);
+            $manager->persist((new Category())->setName($name));
         }
 
         $manager->flush();

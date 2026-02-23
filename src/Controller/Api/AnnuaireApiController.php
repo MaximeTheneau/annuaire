@@ -252,8 +252,6 @@ class AnnuaireApiController extends AbstractController
         $address = $company->getAddress();
         $city = $address?->getCity();
         $department = $city?->getDepartment();
-        $category = $company->getCategory();
-
         return [
             'slug' => $company->getSlug(),
             'name' => $company->getName(),
@@ -261,7 +259,7 @@ class AnnuaireApiController extends AbstractController
             'website' => $company->getWebsite(),
             'description' => $company->getDescription(),
             'siret' => $company->getSiret(),
-            'category' => $category ? $this->serializeCategory($category) : null,
+            'categories' => array_values($company->getCategories()->map(fn (Category $c) => $this->serializeCategory($c))->toArray()),
             'address' => $address ? [
                 'formatted' => $address->getFormatted(),
                 'lat' => $address->getLat(),
