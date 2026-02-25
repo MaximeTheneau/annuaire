@@ -120,7 +120,7 @@ private function getImagine(): \Imagine\Image\ImagineInterface
             );
         }
 
-        $img->strip()->save($localPath, ['webp_quality' => 80]);
+        $img->strip()->save($localPath, ['webp_quality' => 65, 'webp_lossless' => false]);
     }
 
     public function setPicture(File $brochureFile, $company, $slug): void

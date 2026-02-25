@@ -23,10 +23,16 @@ class ProDashboardController extends AbstractDashboardController
     #[Route('/pro/admin', name: 'pro_admin')]
     public function index(): Response
     {
+        // Le super admin n'a rien à faire ici
+        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
+            return $this->redirectToRoute('admin');
+        }
+
         $user = $this->getUser();
+
         if ($user instanceof User && $user->getCompany() instanceof Company) {
             $url = $this->adminUrlGenerator
-                ->setController(ProCompanyCrudController::class)
+                ->setController(CompanyCrudController::class)
                 ->setAction(Action::EDIT)
                 ->setEntityId($user->getCompany()->getId())
                 ->generateUrl();
@@ -34,8 +40,10 @@ class ProDashboardController extends AbstractDashboardController
             return $this->redirect($url);
         }
 
+        // PRO sans fiche → formulaire de création
         $url = $this->adminUrlGenerator
-            ->setController(ProCompanyCrudController::class)
+            ->setController(CompanyCrudController::class)
+            ->setAction(Action::NEW)
             ->generateUrl();
 
         return $this->redirect($url);
@@ -53,13 +61,12 @@ class ProDashboardController extends AbstractDashboardController
 
         if ($user instanceof User) {
             $editAccountUrl = $this->adminUrlGenerator
-                ->setController(ProAccountCrudController::class)
+                ->setController(CompanyCrudController::class)
                 ->setAction(Action::EDIT)
                 ->setEntityId($user->getId())
                 ->generateUrl();
 
             $userMenu->addMenuItems([
-                MenuItem::linkToUrl('Mon compte', 'fa fa-user-circle', $editAccountUrl),
                 MenuItem::linkToRoute('Changer le mot de passe', 'fa fa-key', 'app_change_password'),
             ]);
         }
@@ -73,11 +80,19 @@ class ProDashboardController extends AbstractDashboardController
 
         if ($user instanceof User && $user->getCompany() instanceof Company) {
             $url = $this->adminUrlGenerator
-                ->setController(ProCompanyCrudController::class)
+                ->setController(CompanyCrudController::class)
                 ->setAction(Action::EDIT)
                 ->setEntityId($user->getCompany()->getId())
                 ->generateUrl();
-            }
-        yield MenuItem::linkToUrl('Ma fiche', 'fa fa-building', $url);
+
+            yield MenuItem::linkToUrl('Ma fiche', 'fa fa-building', $url);
+        } else {
+            $url = $this->adminUrlGenerator
+                ->setController(CompanyCrudController::class)
+                ->setAction(Action::NEW)
+                ->generateUrl();
+
+            yield MenuItem::linkToUrl('Créer ma fiche', 'fa fa-plus', $url);
+        }
     }
 }

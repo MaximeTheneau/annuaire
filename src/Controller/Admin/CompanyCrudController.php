@@ -196,6 +196,15 @@ class CompanyCrudController extends AbstractCrudController
         parent::updateEntity($entityManager, $entityInstance);
     }
 
+    public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
+    {
+        if ($entityInstance instanceof Company && $entityInstance->getImg() !== null) {
+            $this->imageOptimizer->clearImage($entityInstance->getImg());
+        }
+
+        parent::deleteEntity($entityManager, $entityInstance);
+    }
+
     private function handleImageDeletion(Company $company): void
     {
         if (!$company->isDeleteImage() || $company->getImg() === null) {

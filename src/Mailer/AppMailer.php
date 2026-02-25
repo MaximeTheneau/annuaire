@@ -5,12 +5,14 @@ namespace App\Mailer;
 use App\Entity\Company;
 use App\Entity\SecurityToken;
 use App\Entity\User;
+use Scheb\TwoFactorBundle\Mailer\AuthCodeMailerInterface;
+use Scheb\TwoFactorBundle\Model\Email\TwoFactorInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-class AppMailer
+class AppMailer implements AuthCodeMailerInterface
 {
     public function __construct(
         private readonly MailerInterface $mailer,
@@ -129,5 +131,34 @@ class AppMailer
             ]);
 
         $this->mailer->send($email);
+    }
+
+    public function sendAuthCode(TwoFactorInterface $user): void
+    {
+        if (!$user instanceof User) {
+            return;
+        }
+        try {
+
+            $authCode = $user->getEmailAuthCode();
+
+            if (!$authCode) {
+                return;
+            }
+
+            $email = (new TemplatedEmail())
+                ->to($user->getEmail())
+                ->subject($authCode . ' : Votre code d\'authentification')
+                ->htmlTemplate('emails/two_factor.html.twig')
+                ->context([
+                    'user' => $user,
+                    'code' => $authCode,
+                ]);
+
+            $this->mailer->send($email);
+        } catch (\Exception $e) {
+            // Log the error or handle it as needed
+            echo $e->getMessage();
+         }
     }
 }

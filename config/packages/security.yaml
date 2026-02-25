@@ -29,14 +29,15 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
-                default_target_path: app_pro_company
+                default_target_path: pro_admin
                 enable_csrf: true
                 csrf_token_id: authenticate
-                success_handler: App\Security\LoginSuccessHandler
             logout:
                 path: app_logout
                 target: app_login
-
+            two_factor:
+                auth_form_path: 2fa_login     # ex: route /2fa
+                check_path: 2fa_login_check
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
@@ -44,12 +45,13 @@ security:
     access_control:
         - { path: ^/api/*, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, role: PUBLIC_ACCESS }
+        - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
         - { path: ^/inscription, roles: PUBLIC_ACCESS }
         - { path: ^/verification, roles: PUBLIC_ACCESS }
         - { path: ^/mot-de-passe/oublie, roles: PUBLIC_ACCESS }
         - { path: ^/mot-de-passe/reinitialiser, roles: PUBLIC_ACCESS }
         - { path: ^/annuaire-pro, roles: PUBLIC_ACCESS }
-        - { path: ^/2fa, roles: ROLE_USER }
         - { path: ^/confirmation-connexion, roles: ROLE_USER }
         - { path: ^/mot-de-passe/changer, roles: ROLE_USER }
         - { path: ^/admin, roles: ROLE_SUPER_ADMIN }

@@ -184,6 +184,43 @@ class RegistrationController extends AbstractController
         ], new Response(null, $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
+    #[Route('/verification/renvoyer', name: 'app_resend_verification')]
+    public function resendVerification(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SecurityTokenManager $tokenManager,
+        AppMailer $mailer,
+        ParameterBagInterface $params
+    ): Response {
+        $email = $request->query->get('email', '');
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => mb_strtolower($email)]);
+
+        // On renvoie toujours le même message pour ne pas exposer si l'email existe
+        if ($user instanceof User && !$user->isVerified()) {
+            // Invalider les anciens tokens de confirmation
+            $oldTokens = $entityManager->getRepository(SecurityToken::class)->findBy([
+                'user' => $user,
+                'type' => SecurityToken::TYPE_CONFIRM_EMAIL,
+            ]);
+            foreach ($oldTokens as $old) {
+                $entityManager->remove($old);
+            }
+            $entityManager->flush();
+
+            $token = $tokenManager->createToken(
+                $user,
+                SecurityToken::TYPE_CONFIRM_EMAIL,
+                new \DateTimeImmutable(sprintf('+%d minutes', (int) $params->get('app.confirm_email_ttl_minutes')))
+            );
+
+            $mailer->sendRegistrationConfirmation($user, $token);
+        }
+
+        $this->addFlash('success', 'Si votre adresse est enregistrée et non vérifiée, un nouvel email vous a été envoyé.');
+
+        return $this->redirectToRoute('app_login');
+    }
+
     #[Route('/verification/compte/{token}', name: 'app_register_confirm')]
     public function confirm(
         string $token,

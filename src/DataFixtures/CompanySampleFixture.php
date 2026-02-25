@@ -109,9 +109,12 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
             if (!$user instanceof User) {
                 $user = (new User())
                     ->setEmail($email)
+                    ->setName('PRO ' . $index)
+                    ->setLastName('Sample')
+                    ->setFirstName('PRO')
                     ->setRoles(['ROLE_PRO'])
                     ->setIsVerified(true)
-                    ->setTwoFactorEnabled(false);
+                    ->setTwoFactorEnabled(true);
                 $user->setPassword($this->passwordHasher->hashPassword($user, 'ChangeMe123!'));
                 $manager->persist($user);
             }

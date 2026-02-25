@@ -70,7 +70,7 @@ class Company extends BaseEntity
     // Used only by the admin CRUD form to collect Google Places data before
     // resolving to Address / City / Department entities in the controller.
 
-    private ?\Symfony\Component\HttpFoundation\File\UploadedFile $imageFile = null;
+    private ?string $imageFile = null;
     private bool $deleteImage = false;
 
     private ?string $placeId = null;
@@ -322,8 +322,8 @@ class Company extends BaseEntity
 
     // ── Transient getters / setters ───────────────────────────────────────────
 
-    public function getImageFile(): ?\Symfony\Component\HttpFoundation\File\UploadedFile { return $this->imageFile; }
-    public function setImageFile(?\Symfony\Component\HttpFoundation\File\UploadedFile $file): static { $this->imageFile = $file; return $this; }
+    public function getImageFile(): ?string { return $this->imageFile; }
+    public function setImageFile(?string $file): static { $this->imageFile = $file; return $this; }
 
     public function isDeleteImage(): bool { return $this->deleteImage; }
     public function setDeleteImage(bool $v): static { $this->deleteImage = $v; return $this; }
