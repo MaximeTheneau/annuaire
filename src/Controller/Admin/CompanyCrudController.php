@@ -7,6 +7,9 @@ use App\Mailer\AppMailer;
 use App\Service\AddressResolverService;
 use App\Service\ImageOptimizer;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
@@ -14,12 +17,15 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\KeyValueStore;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -33,6 +39,7 @@ class CompanyCrudController extends AbstractCrudController
         private readonly AppMailer $mailer,
         private readonly AddressResolverService $addressResolver,
         private readonly ImageOptimizer $imageOptimizer,
+        private readonly Security $security,
         private ParameterBagInterface $params,
     ) {}
 
@@ -64,7 +71,6 @@ class CompanyCrudController extends AbstractCrudController
 
         // ── Image — affichage index/détail ────────────────────────────────────
         yield ImageField::new('img', 'Logo')
-            ->setBasePath('')
             ->hideOnForm();
 
         // ── Image — formulaire (upload + suppression) ─────────────────────────
@@ -141,7 +147,10 @@ class CompanyCrudController extends AbstractCrudController
         yield TextField::new('phone', 'Téléphone')->hideOnIndex();
         yield TextField::new('website', 'Site web')->hideOnIndex();
         yield TextareaField::new('description', 'Description')->hideOnIndex();
-        yield BooleanField::new('approved', 'Approuvé');
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            yield BooleanField::new('approved', 'Approuvé');
+        }
     }
 
     public function configureActions(Actions $actions): Actions
@@ -149,6 +158,18 @@ class CompanyCrudController extends AbstractCrudController
         return $actions
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
             ->reorder(Crud::PAGE_INDEX, [Action::DETAIL, Action::EDIT, Action::DELETE]);
+    }
+
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+    {
+        $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $qb->andWhere('entity.owner = :currentUser')
+                ->setParameter('currentUser', $this->security->getUser());
+        }
+
+        return $qb;
     }
 
     public function edit(AdminContext $context): KeyValueStore|Response
@@ -218,7 +239,7 @@ class CompanyCrudController extends AbstractCrudController
     private function handleImageUpload(Company $company): void
     {
         $file = $company->getImageFile();
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
+        if (!$file instanceof UploadedFile) {
             return;
         }
 

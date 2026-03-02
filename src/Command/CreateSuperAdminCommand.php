@@ -47,6 +47,8 @@ class CreateSuperAdminCommand extends Command
         $user = (new User())
             ->setEmail($email)
             ->setRoles(['ROLE_SUPER_ADMIN'])
+            ->setFirstName('Super')
+            ->setLastName('Admin')
             ->setIsVerified(true)
             ->setTwoFactorEnabled(true);
 
