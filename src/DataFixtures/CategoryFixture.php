@@ -10,7 +10,8 @@ class CategoryFixture extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $csv = new \SplFileObject(__DIR__ . '/data/categories.csv');
+        $fixturesDir = $_ENV['FIXTURES_DIR'] ?? 'fixtures';
+        $csv = new \SplFileObject(dirname(__DIR__, 2) . '/' . $fixturesDir . '/categories.csv');
         $csv->setFlags(\SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
 
         $header = null;

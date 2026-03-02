@@ -1,0 +1,2 @@
+name;category;address;place_id;lat;lng;postal_code;city_name;department_code;department_name;siret;phone;website;description
+Une Taupe Chez Vous; Taupier piégeur; 71 rue marie curie; 27780 Garrenne sur Eure;PLACE_GARRENNE_001;49.1234;0.5678;27780;Garrenne sur Eure;27;Eure;12345678900012;0102030405;https://unetaupechezvous.fr;Service de lutte contre les nuisibles, spécialisé dans la dératisation, désinsectisation et dépigeonnage pour les particuliers et les professionnels.

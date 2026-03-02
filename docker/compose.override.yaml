@@ -14,18 +14,21 @@ services:
     command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
     environment:
       APP_ENV: dev
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      FIXTURES_DIR: ${FIXTURES_DIR:-fixtures}
     volumes:
       - ..:/srv/app:rw,cached
     ports:
-      - "8000:8000"
+      - "${HTTP_PORT:-8000}:8000"
     depends_on:
       - database
 
 ###> symfony/mailer ###
   mailhog:
     image: mailhog/mailhog
-    container_name: mailhog
+    container_name: mailhog-${SITE:-annuaire}
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
 ###< symfony/mailer ###

@@ -21,7 +21,8 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
 
     public function load(ObjectManager $manager): void
     {
-        $path = __DIR__ . '/data/companies_sample.csv';
+        $fixturesDir = $_ENV['FIXTURES_DIR'] ?? 'fixtures';
+        $path = dirname(__DIR__, 2) . '/' . $fixturesDir . '/companies_sample.csv';
         if (!is_file($path)) {
             return;
         }
