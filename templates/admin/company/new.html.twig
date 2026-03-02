@@ -1,0 +1,13 @@
+{% extends '@EasyAdmin/crud/new.html.twig' %}
+
+{% block new_form %}
+    {{ form_start(new_form, {
+        attr: {
+            'data-controller': 'places',
+            'data-places-api-key-value': google_places_api_key|e('html_attr'),
+            'data-turbo': 'false'
+        }
+    }) }}
+    {{ form_widget(new_form) }}
+    {{ form_end(new_form, { render_rest: false }) }}
+{% endblock %}

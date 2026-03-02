@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Mailer\AppMailer;
 use App\Repository\CategoryRepository;
 use App\Repository\CompanyRepository;
+use App\Repository\DepartmentRepository;
 use App\Repository\UserRepository;
 use App\Service\AddressResolverService;
 use App\Service\ImageOptimizer;
@@ -36,10 +37,12 @@ class CompanyRegistrationApiController extends AbstractController
      * Champs attendus (multipart/form-data) :
      *   email, first_name, last_name, company_name, siret, phone
      *   website (optionnel), description (optionnel)
-     *   category_id (UUID de catégorie)
+     *   category_ids (UUID de catégorie)
      *   place_id, formatted_address, city_name
      *   postal_code, department_name, department_code, lat, lng (optionnels)
      *   logo (fichier image optionnel — jpg, png, avif, webp, max 2 Mo)
+     *   intervention_dept_ids[] (optionnel — tableau de slugs département, ex: ["paris","rhone"])
+     *     Si omis, le département de la ville principale est utilisé par défaut.
      */
     #[Route('/register', name: 'api_company_register', methods: ['POST'])]
     public function register(
@@ -48,6 +51,7 @@ class CompanyRegistrationApiController extends AbstractController
         ValidatorInterface     $validator,
         CategoryRepository     $categoryRepository,
         CompanyRepository      $companyRepository,
+        DepartmentRepository   $departmentRepository,
         UserRepository         $userRepository,
         AddressResolverService $addressResolver,
         ImageOptimizer         $imageOptimizer,
@@ -55,7 +59,6 @@ class CompanyRegistrationApiController extends AbstractController
         AppMailer              $mailer,
         ParameterBagInterface  $params,
     ): JsonResponse {
-
         // ── 1. Extraction & nettoyage des champs texte ────────────────────────
         $email       = mb_strtolower(trim((string) $request->request->get('email', '')));
         $firstName   = strip_tags(trim((string) $request->request->get('first_name', '')));
@@ -65,7 +68,10 @@ class CompanyRegistrationApiController extends AbstractController
         $phone       = trim((string) $request->request->get('phone', ''));
         $website     = trim((string) $request->request->get('website', ''));
         $description = strip_tags(trim((string) $request->request->get('description', '')));
-        $categoryId  = trim((string) $request->request->get('category_id', ''));
+        $categoryIds = array_values(array_filter(array_map(
+            fn(string $s) => trim($s),
+            (array) $request->request->all('category_ids')
+        )));
         $placeId     = trim((string) $request->request->get('place_id', ''));
         $fmtAddr     = strip_tags(trim((string) $request->request->get('formatted_address', '')));
         $cityName    = strip_tags(trim((string) $request->request->get('city_name', '')));
@@ -74,7 +80,10 @@ class CompanyRegistrationApiController extends AbstractController
         $deptCode    = trim((string) $request->request->get('department_code', ''));
         $lat         = trim((string) $request->request->get('lat', '')) ?: null;
         $lng         = trim((string) $request->request->get('lng', '')) ?: null;
-
+        $interventionDeptSlugs = array_values(array_filter(array_map(
+            fn(string $s) => trim($s),
+            (array) $request->request->all('intervention_dept_ids')
+        )));
         // ── 2. Validation des champs ──────────────────────────────────────────
         $errors = [];
 
@@ -137,9 +146,9 @@ class CompanyRegistrationApiController extends AbstractController
             $errors['description'][] = 'La description ne peut pas dépasser 5 000 caractères.';
         }
 
-        // Catégorie
-        if ($categoryId === '') {
-            $errors['category_id'][] = 'La catégorie est obligatoire.';
+        // Catégories
+        if (empty($categoryIds)) {
+            $errors['category_ids'][] = 'Au moins une catégorie est obligatoire.';
         }
 
         // Adresse
@@ -159,6 +168,17 @@ class CompanyRegistrationApiController extends AbstractController
         }
         if ($lng !== null && !is_numeric($lng)) {
             $errors['lng'][] = 'La longitude doit être un nombre.';
+        }
+
+        // Slugs département d'intervention (optionnel — max 20)
+        if (count($interventionDeptSlugs) > 20) {
+            $errors['intervention_dept_ids'][] = 'Vous ne pouvez pas sélectionner plus de 20 départements d\'intervention.';
+        } else {
+            foreach ($interventionDeptSlugs as $slug) {
+                if (!preg_match('/^[a-z0-9\-]{2,100}$/', $slug)) {
+                    $errors['intervention_dept_ids'][] = sprintf('Le slug département "%s" est invalide.', $slug);
+                }
+            }
         }
 
         // Logo (optionnel)
@@ -210,11 +230,11 @@ class CompanyRegistrationApiController extends AbstractController
             );
         }
 
-        // ── 4. Résolution de la catégorie ─────────────────────────────────────
-        $category = $categoryRepository->find($categoryId);
-        if ($category === null) {
+        // ── 4. Résolution des catégories ──────────────────────────────────────
+        $categories = $categoryRepository->findBy(['slug' => $categoryIds]);
+        if (count($categories) === 0) {
             return $this->json(
-                ['errors' => ['category_id' => ['Catégorie introuvable.']]],
+                ['errors' => ['category_ids' => ['Aucune catégorie valide trouvée.']]],
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }
@@ -259,8 +279,26 @@ class CompanyRegistrationApiController extends AbstractController
             ->setAddress($address)
             ->setApproved(null); // En attente de validation admin
 
-        $company->addCategory($category);
-        $company->initInterventionDepartmentFromCity();
+        foreach ($categories as $category) {
+            $company->addCategory($category);
+        }
+
+        // ── 8a. Zones d'intervention par département ───────────────────────────
+        if (!empty($interventionDeptSlugs)) {
+            $departments = $departmentRepository->findBy(['slug' => $interventionDeptSlugs]);
+            if (empty($departments)) {
+                return $this->json(
+                    ['errors' => ['intervention_dept_ids' => ['Aucun département d\'intervention valide trouvé.']]],
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+            foreach ($departments as $department) {
+                $company->addInterventionDepartment($department);
+            }
+        } else {
+            // Fallback : département déduit de la ville principale
+            $company->initInterventionDepartmentFromCity();
+        }
 
         $em->persist($user);
         $em->persist($company);
@@ -272,7 +310,7 @@ class CompanyRegistrationApiController extends AbstractController
                 $slug = $company->getSlug() ?? uniqid('company_');
                 $imageOptimizer->setPicture($logoFile, $company, $slug);
                 $em->flush();
-            } catch (\InvalidArgumentException $e) {
+            } catch (\InvalidArgumentException) {
                 // Image refusée par l'optimizer — la company est créée sans logo
             }
         }

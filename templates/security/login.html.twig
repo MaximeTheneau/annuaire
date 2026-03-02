@@ -6,7 +6,14 @@
     <h1>Connexion</h1>
 
     {% if error %}
-        <div class="flash flash-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% if error.messageKey == 'email_not_verified' %}
+            <div class="flash flash-error">
+                Votre adresse e-mail n'a pas encore été vérifiée.
+                <a href="{{ path('app_resend_verification', {email: error.messageData.email}) }}">Renvoyer l'email de vérification</a>
+            </div>
+        {% else %}
+            <div class="flash flash-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
     {% endif %}
 
     <form action="{{ path('app_login') }}" method="post">

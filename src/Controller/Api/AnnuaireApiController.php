@@ -256,6 +256,11 @@ class AnnuaireApiController extends AbstractController
             'slug' => $company->getSlug(),
             'name' => $company->getName(),
             'phone' => $company->getPhone(),
+            'img' => $company->getImg(),
+            'srcset' => $company->getSrcset(),
+            'altImg' => 'Logo de ' . $company->getName(),
+            'imgWidth' => $company->getImgWidth(),
+            'imgHeight' => $company->getImgHeight(),
             'website' => $company->getWebsite(),
             'description' => $company->getDescription(),
             'siret' => $company->getSiret(),
@@ -272,6 +277,7 @@ class AnnuaireApiController extends AbstractController
                     'department' => $department ? $this->serializeDepartment($department) : null,
                 ] : null,
             ] : null,
+            'interventionDept' => $company->getinterventionDepartments()->map(fn (Department $d) => $this->serializeDepartment($d))->toArray(),
         ];
     }
 }

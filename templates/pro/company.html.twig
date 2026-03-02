@@ -14,9 +14,9 @@
             <p><strong>Département:</strong> {{ company.address.city.department.name }} ({{ company.address.city.department.code }})</p>
         {% endif %}
         <p><strong>Téléphone:</strong> {{ company.phone }}</p>
-        {% if company.category %}
+        {# {% if company.category %}
             <p><strong>Catégorie:</strong> {{ company.category.name }}</p>
-        {% endif %}
+        {% endif %} #}
         {% if company.website %}
             <p><strong>Site web:</strong> <a href="{{ company.website }}" target="_blank" rel="noopener">Voir</a></p>
         {% endif %}

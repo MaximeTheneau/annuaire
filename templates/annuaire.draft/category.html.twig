@@ -64,9 +64,9 @@
             <a class="card" href="{{ path('app_annuaire_company', { departmentSlug: company.address.city.department.slug, citySlug: company.address.city.slug, companySlug: company.slug }) }}">
                 <h3>{{ company.name }}</h3>
                 <p class="muted">{{ company.address.formatted }}</p>
-                {% if company.category %}
+                {# {% if company.category %}
                     <span class="pill">{{ company.category.name }}</span>
-                {% endif %}
+                {% endif %} #}
                 <span class="link">Voir la fiche →</span>
             </a>
         {% else %}
