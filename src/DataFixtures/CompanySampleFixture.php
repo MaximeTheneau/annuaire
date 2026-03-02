@@ -116,7 +116,7 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
                     ->setRoles(['ROLE_PRO'])
                     ->setIsVerified(true)
                     ->setTwoFactorEnabled(true);
-                $user->setPassword($this->passwordHasher->hashPassword($user, 'ChangeMe123!'));
+                $user->setPassword($this->passwordHasher->hashPassword($user, '!ChangeMe!'));
                 $manager->persist($user);
             }
 

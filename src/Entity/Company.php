@@ -6,6 +6,7 @@ use App\Repository\CompanyRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
@@ -70,7 +71,7 @@ class Company extends BaseEntity
     // Used only by the admin CRUD form to collect Google Places data before
     // resolving to Address / City / Department entities in the controller.
 
-    private ?string $imageFile = null;
+    private ?File $imageFile = null;
     private bool $deleteImage = false;
 
     private ?string $placeId = null;
@@ -322,8 +323,8 @@ class Company extends BaseEntity
 
     // ── Transient getters / setters ───────────────────────────────────────────
 
-    public function getImageFile(): ?string { return $this->imageFile; }
-    public function setImageFile(?string $file): static { $this->imageFile = $file; return $this; }
+    public function getImageFile(): ?File { return $this->imageFile; }
+    public function setImageFile(?File $file): static { $this->imageFile = $file; return $this; }
 
     public function isDeleteImage(): bool { return $this->deleteImage; }
     public function setDeleteImage(bool $v): static { $this->deleteImage = $v; return $this; }

@@ -52,6 +52,7 @@ class ProDashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
+
             ->setTitle('Mon espace pro');
     }
 
@@ -81,18 +82,18 @@ class ProDashboardController extends AbstractDashboardController
         if ($user instanceof User && $user->getCompany() instanceof Company) {
             $url = $this->adminUrlGenerator
                 ->setController(CompanyCrudController::class)
-                ->setAction(Action::EDIT)
-                ->setEntityId($user->getCompany()->getId())
+                ->setAction(Action::INDEX)
+                // ->setEntityId($user->getCompany()->getId())
                 ->generateUrl();
 
             yield MenuItem::linkToUrl('Ma fiche', 'fa fa-building', $url);
-        } else {
-            $url = $this->adminUrlGenerator
+            $urlnew = $this->adminUrlGenerator
                 ->setController(CompanyCrudController::class)
                 ->setAction(Action::NEW)
                 ->generateUrl();
 
-            yield MenuItem::linkToUrl('Créer ma fiche', 'fa fa-plus', $url);
+            yield MenuItem::linkToUrl('Ajouter une entreprise', 'fa fa-plus', $urlnew);
+        } else {
         }
     }
 }

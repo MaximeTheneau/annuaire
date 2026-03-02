@@ -34,9 +34,19 @@ ENV_FILE = .env.$(SITE)
 check-env:
 	@if [ ! -f "$(ENV_FILE)" ]; then \
 		echo "ERREUR : $(ENV_FILE) introuvable."; \
-		echo "Copiez .env.$(SITE).dist en .env.$(SITE) et remplissez-le."; \
+		echo "Lancez : make new-site SITE=$(SITE)"; \
 		exit 1; \
 	fi
+
+new-site: ## Crée .env.SITE depuis le template (SITE=...)
+	@if [ -f "$(ENV_FILE)" ]; then \
+		echo "$(ENV_FILE) existe déjà — supprimez-le d'abord si vous voulez le recréer."; \
+		exit 1; \
+	fi
+	@sed 's/monsite/$(SITE)/g' .env.site.dist > $(ENV_FILE)
+	@mkdir -p fixtures/$(SITE)
+	@echo "✓ $(ENV_FILE) créé (pensez à renseigner les mots de passe et APP_SECRET)"
+	@echo "✓ fixtures/$(SITE)/ créé"
 
 # ── Docker ────────────────────────────────────────────────────────
 
@@ -68,15 +78,18 @@ migrate: check-env ## Migrations (SITE=...)
 fixtures: check-env ## Charge les fixtures du site (SITE=...)
 	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:fixtures:load --no-interaction
 
-db-reset: check-env ## Drop + create + migrate + fixtures (SITE=...)
-	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:database:drop --force --if-exists
-	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:database:create
+db-reset: check-env ## Drop + create + migrate + fixtures via root MySQL (SITE=...)
+	$(DOCKER_COMPOSE) exec database sh -c \
+		"mysql -uroot -p\$${MYSQL_ROOT_PASSWORD} -e \
+		'DROP DATABASE IF EXISTS \`'\$${MYSQL_DATABASE}'\`; \
+		 CREATE DATABASE \`'\$${MYSQL_DATABASE}'\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; \
+		 GRANT ALL ON \`'\$${MYSQL_DATABASE}'\`.* TO \"'\$${MYSQL_USER}'\"@\"%\";'"
 	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:migrations:migrate --no-interaction
 	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:fixtures:load --no-interaction
 
 init: up ## Lance, migre et charge les fixtures (SITE=...)
-	@sleep 5
-	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:database:create --if-not-exists
+	@echo "Attente de MySQL..."
+	@$(DOCKER_COMPOSE) exec database sh -c 'until mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent; do sleep 1; done'
 	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:migrations:migrate --no-interaction
 	$(DOCKER_COMPOSE) exec $(PHP_SERVICE) php bin/console doctrine:fixtures:load --no-interaction
 	@echo ""
@@ -133,7 +146,7 @@ db-reset-prod: check-env ## [PROD] Drop + create + migrate en prod (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction --env=prod
 
 console-prod: check-env ## [PROD] Commande Symfony en prod : make console-prod CMD="cache:clear" SITE=...
-	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console $(CMD) --env=prod
+	$(DOCKER_COMPOSE_PROD) run --rm $(PHP_SERVICE_PROD) php bin/console $(CMD) --env=prod
 
 logs-prod: ## [PROD] Logs en continu (SITE=...)
 	$(DOCKER_COMPOSE_PROD) logs -f $(PHP_SERVICE_PROD)
@@ -165,7 +178,7 @@ help: ## Affiche cette aide
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[32m%-28s\033[0m %s\n", $$1, $$2}'
 
 .DEFAULT_GOAL := help
-.PHONY: check-env up down restart logs ps bash console migrate fixtures db-reset init \
+.PHONY: check-env new-site up down restart logs ps bash console migrate fixtures db-reset init \
 	up-unetaupechezvous down-unetaupechezvous init-unetaupechezvous fixtures-unetaupechezvous db-reset-unetaupechezvous \
 	up-maximefreelance down-maximefreelance init-maximefreelance fixtures-maximefreelance db-reset-maximefreelance \
 	up-prod down-prod migrate-prod db-reset-prod console-prod logs-prod \
