@@ -1,0 +1,2 @@
+name;category;address;place_id;lat;lng;postal_code;city_name;department_code;department_name;siret;phone;website;description
+Maxime Freelance;Développement web;104 avenue des Goumiers, 13008 Marseille;PLACE_MARSEILLE_001;43.2965;5.3708;13008;Marseille;13;Bouches-du-Rhône;532 206 380 00034;;https://maximefreelance.fr/;Création de sites web sur mesure et applications React/Next.js pour startups et PME.
