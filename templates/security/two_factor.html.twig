@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation 2FA{% endblock %}
+
+{% block body %}
+    <h1>Validation 2FA</h1>
+    <p>Un code à 6 chiffres a été envoyé à votre adresse email.</p>
+
+    {% if authenticationError %}
+        <p class="error">
+            {{ authenticationError.messageKey|trans(authenticationError.messageData, 'security') }}
+        </p>
+    {% endif %}
+
+    <form method="post" action="{{ path('2fa_login_check') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('two_factor_auth') }}">
+
+        <div>
+            <label for="_auth_code">Code de vérification</label>
+            <input type="text"
+                   id="_auth_code"
+                   name="_auth_code"
+                   inputmode="numeric"
+                   autocomplete="one-time-code"
+                   maxlength="6"
+                   autofocus
+                   required>
+        </div>
+
+        <button type="submit">Valider</button>
+    </form>
+
+    <p>
+        <a href="{{ path('app_logout') }}">Annuler et revenir à la connexion</a>
+    </p>
+{% endblock %}

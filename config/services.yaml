@@ -7,6 +7,27 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.confirm_email_ttl_minutes: '%env(int:APP_CONFIRM_EMAIL_TTL_MINUTES)%'
+    app.confirm_login_ttl_minutes: '%env(int:APP_CONFIRM_LOGIN_TTL_MINUTES)%'
+    app.two_factor_ttl_minutes: '%env(int:APP_TWO_FACTOR_TTL_MINUTES)%'
+    app.reset_password_ttl_minutes: '%env(int:APP_RESET_PASSWORD_TTL_MINUTES)%'
+    app.confirm_password_change_ttl_minutes: '%env(int:APP_CONFIRM_PASSWORD_CHANGE_TTL_MINUTES)%'
+    app.two_factor_cooldown_seconds: '%env(int:APP_TWO_FACTOR_COOLDOWN_SECONDS)%'
+    app.admin_email: '%env(ADMIN_EMAIL)%'
+
+    app.projectDir : '%env(resolve:APP_PROJECTDIR)%'
+    app.imgDir : '%env(resolve:IMG_DIR)%'
+    app.domain.img : '%env(resolve:DOMAIN_IMG)%'
+
+
+    amazon.s3.key:     '%env(resolve:AWS_KEY)%'
+    amazon.s3.secret:  '%env(resolve:AWS_SECRET)%'
+    amazon.s3.region:  '%env(resolve:AWS_REGION)%'
+    amazon.s3.bucket:  '%env(resolve:AWS_BUCKET)%'
+    amazon.s3.version: '%env(resolve:AWS_VERSION)%'
+
+    #CloudFront
+    amazon.s3.bucket.front:  '%env(resolve:AWS_BUCKET_FRONT)%'
 
 services:
     # default configuration for services in *this* file
@@ -21,3 +42,6 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Mailer\AppMailer:
+        arguments:
+            $adminEmail: '%app.admin_email%'

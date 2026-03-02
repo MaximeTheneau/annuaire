@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code de connexion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .wrapper { max-width: 600px; margin: 40px auto;  border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
+        .header p { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; }
+        .body { padding: 40px 32px; }
+        .body p { font-size: 15px; line-height: 1.7; color: #555; margin-bottom: 16px; }
+        .code-box { background: #f0f4ff; border: 2px dashed #1a73e8; border-radius: 10px; padding: 28px 16px; text-align: center; margin: 28px 0; }
+        .code-box .code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #1a73e8; font-family: 'Courier New', monospace; }
+        .code-box small { display: block; margin-top: 10px; font-size: 12px; color: #888; }
+        .warning { background: #fff8e1; border-left: 4px solid #f9a825; border-radius: 6px; padding: 14px 18px; margin-top: 24px; }
+        .warning p { font-size: 13px; color: #7a6000; margin: 0; }
+        .footer { background: #f4f6f9; padding: 24px 32px; text-align: center; border-top: 1px solid #e8eaed; }
+        .footer p { font-size: 12px; color: #999; line-height: 1.6; }
+        .footer strong { color: #555; }
+    </style>
+</head>
+<body>
+    <div class="body">
+        <p>Bonjour{% if user is defined and user.email is defined %} <strong>{{ user.email }}</strong>{% endif %},</p>
+        <p>Vous tentez de vous connecter à votre espace professionnel. Voici votre code de vérification à usage unique :</p>
+
+        <div class="code-box">
+            <div class="code">{{ code }}</div>
+            <small>Ce code est valable pendant <strong>10 minutes</strong></small>
+        </div>
+
+        <p>Saisissez ce code sur la page de connexion pour finaliser votre authentification.</p>
+
+        <div class="warning">
+            <p>⚠️ <strong>Si vous n'êtes pas à l'origine de cette tentative de connexion</strong>, ignorez cet email et changez votre mot de passe immédiatement.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    </div>
+</body>
+</html>

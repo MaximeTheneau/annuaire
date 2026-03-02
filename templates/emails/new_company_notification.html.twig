@@ -1,0 +1,31 @@
+<h2>Nouvelle entreprise à approuver</h2>
+
+<p>Une nouvelle fiche professionnelle vient d'être créée et attend votre validation.</p>
+
+<table style="border-collapse: collapse; margin: 16px 0;">
+    <tr>
+        <td style="padding: 4px 12px 4px 0; font-weight: bold;">Entreprise</td>
+        <td>{{ company.name }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 4px 12px 4px 0; font-weight: bold;">SIRET</td>
+        <td>{{ company.siret }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 4px 12px 4px 0; font-weight: bold;">Propriétaire</td>
+        <td>{{ company.owner.email }}</td>
+    </tr>
+    {# {% if company.category %}
+    <tr>
+        <td style="padding: 4px 12px 4px 0; font-weight: bold;">Catégorie</td>
+        <td>{{ company.category.name }}</td>
+    </tr>
+    {% endif %} #}
+</table>
+
+<p style="margin: 24px 0;">
+    <a href="{{ adminUrl }}"
+       style="background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+        Accéder au panneau d'administration
+    </a>
+</p>

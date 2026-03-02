@@ -1,4 +1,6 @@
 .env.*
+/docker/.env
+!/docker/.env.example
 /public/bundles/*
 
 # Cache and logs (Symfony2)
@@ -58,3 +60,9 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+
+###> symfony/secrets ###
+# Ne jamais versionner la clé privée de prod
+/config/secrets/*
+
+###< symfony/secrets ###

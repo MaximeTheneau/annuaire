@@ -1,11 +1,18 @@
 security:
+    role_hierarchy:
+        ROLE_SUPER_ADMIN: [ROLE_PRO, ROLE_ADMIN, ROLE_USER]
+        ROLE_PRO: [ROLE_USER]
+
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
 
     firewalls:
         dev:
@@ -14,18 +21,42 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
+            user_checker: App\Security\UserChecker
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
-
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: pro_admin
+                enable_csrf: true
+                csrf_token_id: authenticate
+            logout:
+                path: app_logout
+                target: app_login
+            two_factor:
+                auth_form_path: 2fa_login     # ex: route /2fa
+                check_path: 2fa_login_check
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/*, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, role: PUBLIC_ACCESS }
+        - { path: ^/2fa, role: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        - { path: ^/inscription, roles: PUBLIC_ACCESS }
+        - { path: ^/verification, roles: PUBLIC_ACCESS }
+        - { path: ^/mot-de-passe/oublie, roles: PUBLIC_ACCESS }
+        - { path: ^/mot-de-passe/reinitialiser, roles: PUBLIC_ACCESS }
+        - { path: ^/annuaire-pro, roles: PUBLIC_ACCESS }
+        - { path: ^/confirmation-connexion, roles: ROLE_USER }
+        - { path: ^/mot-de-passe/changer, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_SUPER_ADMIN }
+        - { path: ^/pro, roles: ROLE_PRO }
+        - { path: ^/, roles: ROLE_USER }
 
 when@test:
     security:

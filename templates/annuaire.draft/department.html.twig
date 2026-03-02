@@ -1,0 +1,30 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block hero_title %}{{ department.name }}{% endblock %}
+{% block hero_subtitle %}Choisissez une ville pour découvrir les pros.{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb">
+        <a href="{{ path('app_annuaire_index') }}">Annuaire</a>
+        <span>•</span>
+        <span>{{ department.name }}</span>
+    </div>
+
+    <div class="section-title">
+        <h2>Villes</h2>
+        <span class="pill">{{ cities|length }} villes</span>
+    </div>
+
+    <div class="card-grid">
+        {% for city in cities %}
+            {% set count = counts[city.idHex] ?? 0 %}
+            <a class="card" href="{{ path('app_annuaire_city', { departmentSlug: department.slug, citySlug: city.slug }) }}">
+                <h3>{{ city.name }}</h3>
+                <p class="muted">{{ count }} entreprise{{ count > 1 ? 's' : '' }}</p>
+                <span class="link">Voir →</span>
+            </a>
+        {% else %}
+            <div class="empty">Aucune ville disponible pour ce département.</div>
+        {% endfor %}
+    </div>
+{% endblock %}

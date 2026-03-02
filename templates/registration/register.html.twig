@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription pro{% endblock %}
+
+{% block body %}
+    <h1>Créer un compte professionnel</h1>
+
+    {{ form_start(form, { attr: { 'data-controller': 'places', 'data-places-api-key-value': google_places_api_key|e('js'), 'data-turbo': 'false' } }) }}
+        {{ form_row(form.email) }}
+        {{ form_row(form.category) }}
+        {{ form_row(form.company_name) }}
+        {{ form_row(form.siret) }}
+        {{ form_row(form.address, { attr: { 'data-places-target': 'address' } }) }}
+        {{ form_widget(form.place_id,        { attr: { 'data-places-target': 'placeId' } }) }}
+        {{ form_widget(form.lat,             { attr: { 'data-places-target': 'lat' } }) }}
+        {{ form_widget(form.lng,             { attr: { 'data-places-target': 'lng' } }) }}
+        {{ form_widget(form.postal_code,     { attr: { 'data-places-target': 'postalCode' } }) }}
+        {{ form_widget(form.city_name,       { attr: { 'data-places-target': 'cityName' } }) }}
+        {{ form_widget(form.department_name, { attr: { 'data-places-target': 'departmentName' } }) }}
+        {{ form_widget(form.department_code, { attr: { 'data-places-target': 'departmentCode' } }) }}
+        {{ form_row(form.phone) }}
+        {{ form_row(form.website) }}
+        {{ form_row(form.description) }}
+        <button type="submit">Envoyer</button>
+    {{ form_end(form) }}
+
+{% endblock %}

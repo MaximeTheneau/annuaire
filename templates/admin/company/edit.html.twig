@@ -1,0 +1,36 @@
+{% extends '@EasyAdmin/crud/edit.html.twig' %}
+
+{% block edit_form %}
+    {{ form_start(edit_form, {
+        attr: {
+            'data-controller': 'places',
+            'data-places-api-key-value': google_places_api_key|e('html_attr'),
+            'data-turbo': 'false'
+        }
+    }) }}
+    {% set approved = entity.instance.approved %}
+    {% if approved %}
+        <div class="alert alert-success" role="alert">
+            <i class="fa-solid fa-check"></i> L'entreprise est référencée à l'annuaire.
+        </div>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i> Cette entreprise n'est pas encore approuvée.
+        </div>
+    {% endif %}
+
+
+
+    {% set img_url = entity.instance.img %}
+    {% if img_url %}
+        <div class="mb-3 d-flex align-items-center gap-3">
+            <img src="{{ img_url }}"
+                 alt="Logo actuel"
+                 style="max-height: 100px; max-width: 100px; border-radius: 6px; border: 1px solid #dee2e6; object-fit: contain; padding: 4px;">
+            <small class="text-muted">Logo actuel — cochez « Supprimer » pour le retirer.</small>
+        </div>
+    {% endif %}
+
+    {{ form_widget(edit_form) }}
+    {{ form_end(edit_form, { render_rest: false }) }}
+{% endblock %}

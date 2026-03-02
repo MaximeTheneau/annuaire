@@ -1,0 +1,8 @@
+# Ne pas exposer les fichiers sensibles aux IA
+.env
+.env.*
+!.env.example
+docker/.env
+docker/.env.*
+!docker/.env.example
+config/secrets/

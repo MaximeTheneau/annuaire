@@ -1,0 +1,79 @@
+{% extends 'annuaire/base.html.twig' %}
+
+{% block title %}{{ category.name }} · Annuaire Pro{% endblock %}
+
+{% block hero_title %}{{ category.name }}{% endblock %}
+{% block hero_subtitle %}Découvrez les entreprises de cette catégorie.{% endblock %}
+
+{% block body %}
+    <div class="breadcrumb">
+        <a href="{{ path('app_annuaire_index') }}">Annuaire</a>
+        <span>›</span>
+        <a href="{{ path('app_annuaire_category', { categorySlug: category.slug }) }}">{{ category.name }}</a>
+        {% if department %}
+            <span>›</span>
+            <a href="{{ path('app_annuaire_category_department', { categorySlug: category.slug, departmentSlug: department.slug }) }}">{{ department.name }}</a>
+        {% endif %}
+        {% if city %}
+            <span>›</span>
+            <span>{{ city.name }}</span>
+        {% endif %}
+    </div>
+
+    <div class="section-title">
+        <h2>Départements</h2>
+        <span class="pill">{{ departments|length }} disponibles</span>
+    </div>
+    <div class="card-grid">
+        {% for item in departments %}
+            <a class="card" href="{{ path('app_annuaire_category_department', { categorySlug: category.slug, departmentSlug: item.slug }) }}">
+                <h3>{{ item.name }}</h3>
+                <p class="muted">Département {{ item.code }}</p>
+                <span class="link">Voir les villes →</span>
+            </a>
+        {% else %}
+            <div class="empty">Aucun département disponible.</div>
+        {% endfor %}
+    </div>
+
+    {% if department %}
+        <div class="section-title">
+            <h2>Villes</h2>
+            <span class="pill">{{ cities|length }} disponibles</span>
+        </div>
+        <div class="card-grid">
+            {% for item in cities %}
+                <a class="card" href="{{ path('app_annuaire_category_city', { categorySlug: category.slug, departmentSlug: department.slug, citySlug: item.slug }) }}">
+                    <h3>{{ item.name }}</h3>
+                    <p class="muted">{{ department.name }} ({{ department.code }})</p>
+                    <span class="link">Voir les pros →</span>
+                </a>
+            {% else %}
+                <div class="empty">Aucune ville disponible.</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="section-title">
+        <h2>Professionnels</h2>
+        <span class="pill">{{ companies|length }} entreprise{{ companies|length > 1 ? 's' : '' }}</span>
+    </div>
+
+    <div class="card-grid">
+        {% for company in companies %}
+            <a class="card" href="{{ path('app_annuaire_company', { departmentSlug: company.address.city.department.slug, citySlug: company.address.city.slug, companySlug: company.slug }) }}">
+                <h3>{{ company.name }}</h3>
+                <p class="muted">{{ company.address.formatted }}</p>
+                {# {% if company.category %}
+                    <span class="pill">{{ company.category.name }}</span>
+                {% endif %} #}
+                <span class="link">Voir la fiche →</span>
+            </a>
+        {% else %}
+            <div class="empty">
+                <p class="muted">Aucune entreprise disponible pour cette catégorie.</p>
+                <a class="cta" href="{{ path('app_register_pro') }}">Inscrire une entreprise</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
