@@ -207,8 +207,98 @@ make init-prod SITE=monsite
 
 | Stage | Description |
 |---|---|
-| `base` | PHP 8.4-fpm + extensions + OPcache + Composer |
-| `vendor-prod` | `composer install --no-dev` |
-| `vendor-dev` | `composer install` complet (fixtures-bundle inclus) |
-| `runtime` | Image finale : code + vendor prod → PHP-FPM |
-| `with-dev` | Comme runtime + vendor dev → utilisé uniquement pour `fixtures-prod` |
+| `vendor` | `composer install` complet dans l'image `composer:latest` |
+| `runtime` | PHP 8.4-fpm + extensions + OPcache + Composer + code + vendor |
+
+---
+
+## Nginx — exposition sur un domaine
+
+Le container `nginx` écoute sur `HTTP_PORT` (défaut 80). Il y a deux cas selon comment tu veux exposer l'app.
+
+---
+
+### Cas 1 — sous-répertoire d'un domaine existant (ex: `maximefreelance.fr/back-annuaire/`)
+
+Le Nginx principal (celui qui sert `maximefreelance.fr`) fait un reverse proxy vers le container
+`nginx-maximefreelance` en utilisant son **nom Docker** — pas d'IP ni de port exposé nécessaire.
+
+**1. Mettre les containers sur le même réseau Docker.**
+
+Dans `docker/compose.prod.yaml`, déclarer un réseau externe partagé :
+
+```yaml
+networks:
+  default:
+    name: nginx-proxy
+    external: true
+```
+
+Créer ce réseau une fois sur le serveur :
+
+```bash
+docker network create nginx-proxy
+```
+
+Le container du Nginx principal (celui de `maximefreelance.fr`) doit aussi être sur `nginx-proxy`.
+
+**2. Nginx principal** — ajouter dans le `server {}` du domaine :
+
+```nginx
+location /back-annuaire/ {
+    proxy_pass         http://nginx-maximefreelance/;
+    proxy_set_header   Host              $host;
+    proxy_set_header   X-Real-IP         $remote_addr;
+    proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+    proxy_set_header   X-Forwarded-Prefix /back-annuaire;
+}
+```
+
+> `nginx-maximefreelance` est le `container_name` défini dans `compose.prod.yaml`.
+> Le `proxy_pass` avec `/` final supprime le préfixe `/back-annuaire` avant transmission.
+
+**3. Symfony** — déclarer le proxy dans `config/packages/framework.yaml` :
+
+```yaml
+framework:
+    trusted_proxies: '127.0.0.1,REMOTE_ADDR'
+    trusted_headers:
+        - 'x-forwarded-for'
+        - 'x-forwarded-proto'
+        - 'x-forwarded-prefix'
+```
+
+Symfony utilisera alors `X-Forwarded-Prefix` pour générer les URLs avec le bon préfixe
+(`/back-annuaire/login`, `/back-annuaire/api/`, etc.).
+
+---
+
+### Cas 2 — domaine dédié (ex: `annuaire.maximefreelance.fr`)
+
+Le container écoute directement sur le port 80.
+
+**Dans `.env.SITE`** :
+
+```
+HTTP_PORT=80
+```
+
+**Nginx hôte** (optionnel, si tu veux HTTPS avec Certbot) :
+
+```nginx
+server {
+    listen 80;
+    server_name annuaire.maximefreelance.fr;
+
+    location / {
+        proxy_pass         http://127.0.0.1:80/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Pas besoin de `X-Forwarded-Prefix` dans ce cas — Symfony est à la racine du domaine.
