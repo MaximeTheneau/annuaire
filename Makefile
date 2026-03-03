@@ -133,7 +133,7 @@ cache-prod: check-env ## [PROD] Réchauffe le cache Symfony (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 
 fixtures-prod: check-env ## [PROD] Charge les fixtures (image with-dev, profile:fixtures) (SITE=...)
-	$(DOCKER_COMPOSE_FIXTURES) run --rm $(PHP_SERVICE_FIXTURES) \
+	$(DOCKER_COMPOSE_FIXTURES) run --rm --build $(PHP_SERVICE_FIXTURES) \
 		php bin/console doctrine:fixtures:load --no-interaction
 
 db-grant-prod: check-env ## [PROD] Recrée l'user MySQL avec le bon mot de passe (fix 1045) (SITE=...)
@@ -169,7 +169,7 @@ init-prod: up-prod ## [PROD] Premier déploiement : up + migrate + fixtures + ca
 	@echo "Attente de MySQL..."
 	@$(DOCKER_COMPOSE_PROD) exec database sh -c 'until mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent; do sleep 1; done'
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
-	$(DOCKER_COMPOSE_FIXTURES) run --rm $(PHP_SERVICE_FIXTURES) \
+	$(DOCKER_COMPOSE_FIXTURES) run --rm --build $(PHP_SERVICE_FIXTURES) \
 		php bin/console doctrine:fixtures:load --no-interaction
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 	@echo ""
