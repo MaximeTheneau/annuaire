@@ -120,6 +120,10 @@ console-prod: check-env ## [PROD] Commande Symfony : make console-prod CMD="cach
 migrate-prod: check-env ## [PROD] Migrations en prod (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
 
+assets-prod: check-env ## [PROD] Installe les assets JS (importmap + bundles) (SITE=...)
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console assets:install --no-debug
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console importmap:install
+
 cache-prod: check-env ## [PROD] Réchauffe le cache Symfony (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 
@@ -150,17 +154,21 @@ db-reset-prod: check-env ## [PROD] Drop + create + migrate en prod (SITE=...)
 		 GRANT ALL ON \`'\$${MYSQL_DATABASE}'\`.* TO \"'\$${MYSQL_USER}'\"@\"%\";'"
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
 
-deploy-prod: up-prod ## [PROD] Déploie : up + migrate + cache (sans fixtures) (SITE=...)
+deploy-prod: up-prod ## [PROD] Déploie : up + assets + migrate + cache (sans fixtures) (SITE=...)
 	@echo "Attente de MySQL..."
 	@$(DOCKER_COMPOSE_PROD) exec database sh -c 'until mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent; do sleep 1; done'
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console assets:install --no-debug
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console importmap:install
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 	@echo ""
 	@echo "Site '$(SITE)' déployé en prod."
 
-init-prod: up-prod ## [PROD] Premier déploiement : up + migrate + fixtures + cache (SITE=...)
+init-prod: up-prod ## [PROD] Premier déploiement : up + assets + migrate + fixtures + cache (SITE=...)
 	@echo "Attente de MySQL..."
 	@$(DOCKER_COMPOSE_PROD) exec database sh -c 'until mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent; do sleep 1; done'
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console assets:install --no-debug
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php -d memory_limit=512M bin/console importmap:install
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
 	$(DOCKER_COMPOSE_PROD) exec \
 		-e APP_ENV=dev \
