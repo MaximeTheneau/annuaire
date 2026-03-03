@@ -1,15 +1,20 @@
+##
+## Dev — auto-chargé par docker compose (sans -f explicite)
+## Services : app (php -S) + mailhog
+##
 
 services:
-###> doctrine/doctrine-bundle ###
+  ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "3306"
-###< doctrine/doctrine-bundle ###
+      - "${MYSQL_PORT:-3306}:3306"
+  ###< doctrine/doctrine-bundle ###
 
   app:
     build:
       context: ..
       dockerfile: docker/php/Dockerfile
+    container_name: app-${SITE:-annuaire}
     working_dir: /srv/app
     command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
     environment:
@@ -22,13 +27,14 @@ services:
     ports:
       - "${HTTP_PORT:-8000}:8000"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
-###> symfony/mailer ###
+  ###> symfony/mailer ###
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog-${SITE:-annuaire}
     ports:
       - "${MAILHOG_SMTP_PORT:-1025}:1025"
       - "${MAILHOG_UI_PORT:-8025}:8025"
-###< symfony/mailer ###
+  ###< symfony/mailer ###

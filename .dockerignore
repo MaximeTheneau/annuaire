@@ -1,0 +1,29 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Docker (pas besoin dans l'image)
+docker/
+
+# Dépendances (gérées dans l'image via composer)
+vendor/
+
+# Cache / logs Symfony (générés à runtime)
+var/
+
+# Tests
+tests/
+phpunit.dist.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Fichiers de conf locaux (secrets — injectés via Docker env_file)
+.env.local
+.env.*.local
+
+# Docs
+*.md
+PLAN.md

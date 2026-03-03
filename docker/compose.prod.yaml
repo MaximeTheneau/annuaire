@@ -1,0 +1,67 @@
+##
+## Prod — chargé explicitement via Makefile (-f docker/compose.prod.yaml)
+## Services : php (fpm) + nginx + php-fixtures (profile:fixtures)
+##
+## Usage :
+##   make up-prod SITE=unetaupechezvous
+##   make fixtures-prod SITE=unetaupechezvous
+##   make init-prod SITE=unetaupechezvous   # up + migrate + fixtures + cache
+##
+
+services:
+  php:
+    build:
+      context: ..
+      dockerfile: docker/php/Dockerfile.prod
+      target: runtime
+    container_name: php-${SITE:-annuaire}
+    working_dir: /srv/app
+    env_file:
+      - ../.env.${SITE}
+    environment:
+      APP_ENV: prod
+    volumes:
+      - app_var:/srv/app/var:rw
+      - app_uploads:/srv/app/public/uploads:rw
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: docker/nginx/Dockerfile
+    container_name: nginx-${SITE:-annuaire}
+    depends_on:
+      - php
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - app_uploads:/srv/app/public/uploads:ro
+    restart: unless-stopped
+
+  # ── Fixtures — uniquement via : make fixtures-prod SITE=... ──────
+  # Image identique à php mais avec les deps de dev (doctrine-fixtures-bundle)
+  php-fixtures:
+    build:
+      context: ..
+      dockerfile: docker/php/Dockerfile.prod
+      target: with-dev
+    container_name: php-fixtures-${SITE:-annuaire}
+    working_dir: /srv/app
+    env_file:
+      - ../.env.${SITE}
+    environment:
+      APP_ENV: prod
+    volumes:
+      - app_var:/srv/app/var:rw
+    depends_on:
+      database:
+        condition: service_healthy
+    profiles:
+      - fixtures
+
+volumes:
+  app_var:
+  app_uploads:
