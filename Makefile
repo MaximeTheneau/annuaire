@@ -104,7 +104,11 @@ up-prod: check-env ## [PROD] Build + lance php-fpm, nginx, database (SITE=...)
 down-prod: ## [PROD] Arrête les conteneurs prod (SITE=...)
 	$(DOCKER_COMPOSE_PROD) down --remove-orphans
 
-restart-prod: down-prod up-prod ## [PROD] Redémarre (SITE=...)
+restart-prod: down-prod up-prod ## [PROD] Redémarre + rebuild image (SITE=...)
+
+reload-prod: check-env ## [PROD] Recharge env + cache SANS rebuild ni perte BDD (SITE=...)
+	$(DOCKER_COMPOSE_PROD) up -d --no-build
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:clear
 
 logs-prod: ## [PROD] Logs en continu (SITE=...)
 	$(DOCKER_COMPOSE_PROD) logs -f $(PHP_SERVICE_PROD)
