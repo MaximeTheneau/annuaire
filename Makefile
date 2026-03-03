@@ -136,6 +136,14 @@ fixtures-prod: check-env ## [PROD] Charge les fixtures (image with-dev, profile:
 	$(DOCKER_COMPOSE_FIXTURES) run --rm $(PHP_SERVICE_FIXTURES) \
 		php bin/console doctrine:fixtures:load --no-interaction
 
+db-grant-prod: check-env ## [PROD] Recrée l'user MySQL avec le bon mot de passe (fix 1045) (SITE=...)
+	$(DOCKER_COMPOSE_PROD) exec database sh -c \
+		"mysql -uroot -p\$${MYSQL_ROOT_PASSWORD} -e \
+		\"CREATE USER IF NOT EXISTS '\$${MYSQL_USER}'@'%' IDENTIFIED BY '\$${MYSQL_PASSWORD}'; \
+		 ALTER USER '\$${MYSQL_USER}'@'%' IDENTIFIED BY '\$${MYSQL_PASSWORD}'; \
+		 GRANT ALL PRIVILEGES ON \\\`\$${MYSQL_DATABASE}\\\`.* TO '\$${MYSQL_USER}'@'%'; \
+		 FLUSH PRIVILEGES;\""
+
 db-reset-prod: check-env ## [PROD] Drop + create + migrate en prod (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec database sh -c \
 		"mysql -uroot -p\$${MYSQL_ROOT_PASSWORD} -e \

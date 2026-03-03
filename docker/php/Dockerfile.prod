@@ -77,7 +77,7 @@ COPY . .
 # Le vendor de prod (no-dev) écrase ce qui vient du contexte local
 COPY --from=vendor-prod /srv/app/vendor ./vendor
 
-RUN chown -R www-data:www-data var public
+RUN mkdir -p var && chown -R www-data:www-data var public
 
 ##########################################################################
 # Stage 5 — with-dev : comme runtime mais avec les deps de dev

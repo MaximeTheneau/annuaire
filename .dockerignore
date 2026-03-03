@@ -3,8 +3,10 @@
 .gitignore
 .github
 
-# Docker (pas besoin dans l'image)
-docker/
+# Fichiers Docker non nécessaires dans l'image (mais docker/nginx/ est gardé pour le COPY)
+docker/php/
+docker/compose*.yaml
+docker/.env*
 
 # Dépendances (gérées dans l'image via composer)
 vendor/
