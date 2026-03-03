@@ -1,7 +1,21 @@
 ##########################################################################
-# Stage 1 — base : extensions PHP communes (runtime et build)
+# Stage 1 — vendor : composer install (avec dev pour les fixtures)
 ##########################################################################
-FROM php:8.4-fpm-alpine AS base
+FROM composer:latest AS vendor
+
+WORKDIR /srv/app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts
+
+##########################################################################
+# Stage 2 — runtime : image de production finale (php-fpm)
+##########################################################################
+FROM php:8.4-fpm-alpine AS runtime
 
 RUN apk add --no-cache \
       bash \
@@ -39,50 +53,9 @@ RUN { \
     echo 'opcache.fast_shutdown=1'; \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 WORKDIR /srv/app
 
-##########################################################################
-# Stage 2 — vendor-prod : dépendances sans --dev (image finale)
-##########################################################################
-FROM base AS vendor-prod
-
-COPY composer.json composer.lock ./
-
-RUN composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --no-scripts
-
-##########################################################################
-# Stage 3 — vendor-dev : dépendances complètes (fixtures en prod)
-##########################################################################
-FROM base AS vendor-dev
-
-COPY composer.json composer.lock ./
-
-RUN composer install \
-    --optimize-autoloader \
-    --no-interaction \
-    --no-scripts
-
-##########################################################################
-# Stage 4 — runtime : image de production finale (php-fpm)
-##########################################################################
-FROM base AS runtime
-
 COPY . .
-# Le vendor de prod (no-dev) écrase ce qui vient du contexte local
-COPY --from=vendor-prod /srv/app/vendor ./vendor
+COPY --from=vendor /srv/app/vendor ./vendor
 
 RUN mkdir -p var && chown -R www-data:www-data var public
-
-##########################################################################
-# Stage 5 — with-dev : comme runtime mais avec les deps de dev
-#           Utilisé uniquement pour charger les fixtures en prod
-##########################################################################
-FROM runtime AS with-dev
-
-COPY --from=vendor-dev /srv/app/vendor ./vendor

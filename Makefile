@@ -25,17 +25,8 @@ DOCKER_COMPOSE_PROD = docker compose \
 	-f docker/compose.yaml \
 	-f docker/compose.prod.yaml
 
-# ── Fixtures prod : même stack prod + profile fixtures ────────────
-DOCKER_COMPOSE_FIXTURES = docker compose \
-	-p $(SITE) \
-	--env-file .env.$(SITE) \
-	-f docker/compose.yaml \
-	-f docker/compose.prod.yaml \
-	--profile fixtures
-
-PHP_SERVICE          = app
-PHP_SERVICE_PROD     = php
-PHP_SERVICE_FIXTURES = php-fixtures
+PHP_SERVICE      = app
+PHP_SERVICE_PROD = php
 
 ENV_FILE = .env.$(SITE)
 
@@ -132,9 +123,8 @@ migrate-prod: check-env ## [PROD] Migrations en prod (SITE=...)
 cache-prod: check-env ## [PROD] Réchauffe le cache Symfony (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 
-fixtures-prod: check-env ## [PROD] Charge les fixtures (image with-dev, profile:fixtures) (SITE=...)
-	$(DOCKER_COMPOSE_FIXTURES) run --rm --build $(PHP_SERVICE_FIXTURES) \
-		php bin/console doctrine:fixtures:load --no-interaction
+fixtures-prod: check-env ## [PROD] Charge les fixtures (SITE=...)
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:fixtures:load --no-interaction
 
 db-grant-prod: check-env ## [PROD] Recrée l'user MySQL avec le bon mot de passe (fix 1045) (SITE=...)
 	$(DOCKER_COMPOSE_PROD) exec database sh -c \
@@ -169,8 +159,7 @@ init-prod: up-prod ## [PROD] Premier déploiement : up + migrate + fixtures + ca
 	@echo "Attente de MySQL..."
 	@$(DOCKER_COMPOSE_PROD) exec database sh -c 'until mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent; do sleep 1; done'
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:migrations:migrate --no-interaction
-	$(DOCKER_COMPOSE_FIXTURES) run --rm --build $(PHP_SERVICE_FIXTURES) \
-		php bin/console doctrine:fixtures:load --no-interaction
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console doctrine:fixtures:load --no-interaction
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:warmup
 	@echo ""
 	@echo "Site '$(SITE)' initialisé en prod."
