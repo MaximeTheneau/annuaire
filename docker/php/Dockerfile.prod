@@ -58,4 +58,9 @@ WORKDIR /srv/app
 COPY . .
 COPY --from=vendor /srv/app/vendor ./vendor
 
-RUN mkdir -p var && chown -R www-data:www-data var public
+# Installe les assets JS (importmap) et les assets des bundles Symfony
+# APP_SECRET factice : ces commandes ne touchent pas la BDD
+RUN mkdir -p var \
+    && APP_ENV=prod APP_SECRET=dummy php bin/console assets:install --no-debug \
+    && APP_ENV=prod APP_SECRET=dummy php bin/console importmap:install \
+    && chown -R www-data:www-data var public
