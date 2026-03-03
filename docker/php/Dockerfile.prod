@@ -53,6 +53,8 @@ RUN { \
     echo 'opcache.fast_shutdown=1'; \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /srv/app
 
 COPY . .
@@ -61,6 +63,4 @@ COPY --from=vendor /srv/app/vendor ./vendor
 # Installe les assets JS (importmap) et les assets des bundles Symfony
 # APP_SECRET factice : ces commandes ne touchent pas la BDD
 RUN mkdir -p var \
-    && APP_ENV=prod APP_SECRET=dummy php bin/console assets:install --no-debug \
-    && APP_ENV=prod APP_SECRET=dummy php bin/console importmap:install \
     && chown -R www-data:www-data var public
