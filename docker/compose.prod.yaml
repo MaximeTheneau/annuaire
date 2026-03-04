@@ -17,8 +17,6 @@ services:
     working_dir: /srv/app
     env_file:
       - ../.env.${SITE}
-    environment:
-      APP_ENV: prod
     volumes:
       - app_var:/srv/app/var:rw
       - app_uploads:/srv/app/public/uploads:rw
