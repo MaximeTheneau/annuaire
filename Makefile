@@ -104,10 +104,14 @@ up-prod: check-env ## [PROD] Build + lance php-fpm, nginx, database (SITE=...)
 down-prod: ## [PROD] Arrête les conteneurs prod (SITE=...)
 	$(DOCKER_COMPOSE_PROD) down --remove-orphans
 
-restart-prod: down-prod up-prod ## [PROD] Redémarre + rebuild image (SITE=...)
+restart-prod: down-prod up-prod fix-perms-prod ## [PROD] Redémarre + rebuild image (SITE=...)
+
+fix-perms-prod: check-env ## [PROD] Corrige les permissions var/ et public/uploads/ (SITE=...)
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) chown -R www-data:www-data /srv/app/var /srv/app/public/uploads
 
 reload-prod: check-env ## [PROD] Recharge env + cache SANS rebuild ni perte BDD (SITE=...)
 	$(DOCKER_COMPOSE_PROD) up -d --no-build
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) chown -R www-data:www-data /srv/app/var /srv/app/public/uploads
 	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) php bin/console cache:clear
 
 logs-prod: ## [PROD] Logs en continu (SITE=...)
@@ -253,7 +257,7 @@ help: ## Affiche cette aide
 .DEFAULT_GOAL := help
 .PHONY: check-env new-site \
 	up down restart logs ps bash console migrate fixtures db-reset init \
-	up-prod down-prod restart-prod logs-prod bash-prod \
+	up-prod down-prod restart-prod fix-perms-prod logs-prod bash-prod \
 	console-prod migrate-prod cache-prod fixtures-prod db-reset-prod deploy-prod init-prod \
 	up-unetaupechezvous down-unetaupechezvous init-unetaupechezvous fixtures-unetaupechezvous db-reset-unetaupechezvous \
 	up-prod-unetaupechezvous down-prod-unetaupechezvous init-prod-unetaupechezvous fixtures-prod-unetaupechezvous \
