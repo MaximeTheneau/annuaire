@@ -6,9 +6,28 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: Deploy to production
+  pull:
+    name: Git pull
     runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest code
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script_stop: true
+          script: |
+            cd /var/www/html/annuaire
+            git pull origin main
+
+  deploy:
+    name: Deploy ${{ matrix.site }}
+    needs: pull
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        site: [maximefreelance]
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -19,6 +38,5 @@ jobs:
           script_stop: true
           script: |
             cd /var/www/html/annuaire
-            git pull origin main
-            make reload-prod SITE=${{ secrets.SITE }}
-            make migrate-prod SITE=${{ secrets.SITE }}
+            make reload-prod SITE=${{ matrix.site }}
+            make migrate-prod SITE=${{ matrix.site }}
