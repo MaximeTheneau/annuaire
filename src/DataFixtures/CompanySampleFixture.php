@@ -133,8 +133,6 @@ class CompanySampleFixture extends Fixture implements DependentFixtureInterface
                 $company->addCategory($category);
             }
 
-            $user->setCompany($company);
-
             $manager->persist($company);
             $index++;
         }

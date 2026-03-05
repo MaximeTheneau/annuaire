@@ -2,8 +2,8 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\Company;
 use App\Entity\User;
+use App\Repository\CompanyRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -18,6 +18,7 @@ class ProDashboardController extends AbstractDashboardController
 {
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
+        private readonly CompanyRepository $companyRepository,
     ) {}
 
     #[Route('/pro/admin', name: 'pro_admin')]
@@ -30,20 +31,12 @@ class ProDashboardController extends AbstractDashboardController
 
         $user = $this->getUser();
 
-        if ($user instanceof User && $user->getCompany() instanceof Company) {
-            $url = $this->adminUrlGenerator
-                ->setController(CompanyCrudController::class)
-                ->setAction(Action::EDIT)
-                ->setEntityId($user->getCompany()->getId())
-                ->generateUrl();
+        $hasCompanies = $user instanceof User
+            && count($this->companyRepository->findBy(['owner' => $user])) > 0;
 
-            return $this->redirect($url);
-        }
-
-        // PRO sans fiche → formulaire de création
         $url = $this->adminUrlGenerator
             ->setController(CompanyCrudController::class)
-            ->setAction(Action::NEW)
+            ->setAction($hasCompanies ? Action::INDEX : Action::NEW)
             ->generateUrl();
 
         return $this->redirect($url);
@@ -62,12 +55,13 @@ class ProDashboardController extends AbstractDashboardController
 
         if ($user instanceof User) {
             $editAccountUrl = $this->adminUrlGenerator
-                ->setController(CompanyCrudController::class)
+                ->setController(ProAccountCrudController::class)
                 ->setAction(Action::EDIT)
                 ->setEntityId($user->getId())
                 ->generateUrl();
 
             $userMenu->addMenuItems([
+                MenuItem::linkToUrl('Mon compte', 'fa fa-user', $editAccountUrl),
                 MenuItem::linkToRoute('Changer le mot de passe', 'fa fa-key', 'app_change_password'),
             ]);
         }
@@ -77,23 +71,17 @@ class ProDashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
-        $user = $this->getUser();
+        $indexUrl = $this->adminUrlGenerator
+            ->setController(CompanyCrudController::class)
+            ->setAction(Action::INDEX)
+            ->generateUrl();
 
-        if ($user instanceof User && $user->getCompany() instanceof Company) {
-            $url = $this->adminUrlGenerator
-                ->setController(CompanyCrudController::class)
-                ->setAction(Action::INDEX)
-                // ->setEntityId($user->getCompany()->getId())
-                ->generateUrl();
+        $newUrl = $this->adminUrlGenerator
+            ->setController(CompanyCrudController::class)
+            ->setAction(Action::NEW)
+            ->generateUrl();
 
-            yield MenuItem::linkToUrl('Ma fiche', 'fa fa-building', $url);
-            $urlnew = $this->adminUrlGenerator
-                ->setController(CompanyCrudController::class)
-                ->setAction(Action::NEW)
-                ->generateUrl();
-
-            yield MenuItem::linkToUrl('Ajouter une entreprise', 'fa fa-plus', $urlnew);
-        } else {
-        }
+        yield MenuItem::linkToUrl('Mes entreprises', 'fa fa-building', $indexUrl);
+        yield MenuItem::linkToUrl('Ajouter une entreprise', 'fa fa-plus', $newUrl);
     }
 }

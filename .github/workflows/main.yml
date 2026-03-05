@@ -1,0 +1,24 @@
+name: CI/CD — Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script_stop: true
+          script: |
+            cd /var/www/html/annuaire
+            git pull origin main
+            make reload-prod SITE=${{ secrets.SITE }}
+            make migrate-prod SITE=${{ secrets.SITE }}

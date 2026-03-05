@@ -133,6 +133,24 @@ class AppMailer implements AuthCodeMailerInterface
         $this->mailer->send($email);
     }
 
+    public function sendEmailChangeConfirmation(User $user, string $newEmail, SecurityToken $token): void
+    {
+        $url = $this->router->generate('app_confirm_email_change', ['token' => $token->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->to($newEmail)
+            ->subject('Confirmez votre nouvelle adresse e-mail')
+            ->htmlTemplate('emails/confirm_email_change.html.twig')
+            ->context([
+                'user' => $user,
+                'newEmail' => $newEmail,
+                'url' => $url,
+                'expiresAt' => $token->getExpiresAt(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
     public function sendAuthCode(TwoFactorInterface $user): void
     {
         if (!$user instanceof User) {

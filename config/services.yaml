@@ -12,6 +12,7 @@ parameters:
     app.two_factor_ttl_minutes: '%env(int:APP_TWO_FACTOR_TTL_MINUTES)%'
     app.reset_password_ttl_minutes: '%env(int:APP_RESET_PASSWORD_TTL_MINUTES)%'
     app.confirm_password_change_ttl_minutes: '%env(int:APP_CONFIRM_PASSWORD_CHANGE_TTL_MINUTES)%'
+    app.confirm_email_change_ttl_minutes: '%env(int:APP_CONFIRM_EMAIL_CHANGE_TTL_MINUTES)%'
     app.two_factor_cooldown_seconds: '%env(int:APP_TWO_FACTOR_COOLDOWN_SECONDS)%'
     app.admin_email: '%env(ADMIN_EMAIL)%'
 

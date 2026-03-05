@@ -119,4 +119,54 @@ class ChangePasswordController extends AbstractController
 
         return $this->redirectToRoute('app_login');
     }
+
+    #[Route('/email/changer/confirmer/{token}', name: 'app_confirm_email_change')]
+    public function confirmEmailChange(
+        string $token,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $securityToken = $entityManager->getRepository(SecurityToken::class)
+            ->findOneBy(['token' => $token, 'type' => SecurityToken::TYPE_CONFIRM_EMAIL_CHANGE]);
+
+        if (!$securityToken || $securityToken->isExpired() || $securityToken->isUsed()) {
+            $this->addFlash('error', 'Le lien de confirmation est invalide ou expiré.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $payload = $securityToken->getPayload();
+        if (!isset($payload['new_email'])) {
+            $this->addFlash('error', 'Le lien de confirmation est invalide.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $user = $securityToken->getUser();
+        if (!$user instanceof User) {
+            $this->addFlash('error', 'Compte introuvable.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $newEmail = $payload['new_email'];
+
+        // Vérifier que le nouvel email n'est pas déjà pris
+        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $newEmail]);
+        if ($existingUser !== null && $existingUser !== $user) {
+            $this->addFlash('error', 'Cette adresse e-mail est déjà utilisée par un autre compte.');
+            $securityToken->setUsedAt(new \DateTimeImmutable());
+            $entityManager->flush();
+            return $this->redirectToRoute('app_login');
+        }
+
+        $user->setEmail($newEmail);
+        $securityToken->setUsedAt(new \DateTimeImmutable());
+
+        $entityManager->persist($user);
+        $entityManager->persist($securityToken);
+        $entityManager->flush();
+
+        // Changer l'email invalide la session Symfony (identifiant modifié).
+        // L'utilisateur doit se reconnecter avec sa nouvelle adresse.
+        $this->addFlash('success', 'Votre adresse e-mail a été mise à jour. Reconnectez-vous avec votre nouvelle adresse.');
+
+        return $this->redirectToRoute('app_login');
+    }
 }

@@ -37,8 +37,6 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\OneToOne(mappedBy: 'owner', targetEntity: Company::class)]
-    private ?Company $company = null;
 
     #[ORM\Column(nullable: true)]
     private ?string $authCode;
@@ -150,18 +148,6 @@ class User extends BaseEntity implements UserInterface, PasswordAuthenticatedUse
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
-    }
-
-    public function getCompany(): ?Company
-    {
-        return $this->company;
-    }
-
-    public function setCompany(?Company $company): self
-    {
-        $this->company = $company;
-
-        return $this;
     }
 
     public function eraseCredentials(): void
