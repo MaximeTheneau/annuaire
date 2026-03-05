@@ -15,6 +15,7 @@ class SecurityToken extends BaseEntity
     public const TYPE_CONFIRM_LOGIN = 'confirm_login';
     public const TYPE_TWO_FACTOR = 'two_factor';
     public const TYPE_CONFIRM_PASSWORD_CHANGE = 'confirm_password_change';
+    public const TYPE_CONFIRM_EMAIL_CHANGE = 'confirm_email_change';
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]

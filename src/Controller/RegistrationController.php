@@ -159,8 +159,6 @@ class RegistrationController extends AbstractController
             if ($category instanceof \App\Entity\Category) {
                 $company->addCategory($category);
             }
-            $user->setCompany($company);
-
             $entityManager->persist($user);
             $entityManager->persist($company);
             $entityManager->flush();

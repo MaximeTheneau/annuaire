@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\CompanyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -10,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ProController extends AbstractController
 {
     #[Route('/pro/entreprise', name: 'app_pro_company')]
-    public function company(): Response
+    public function company(CompanyRepository $companyRepository): Response
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
@@ -18,7 +19,7 @@ class ProController extends AbstractController
         }
 
         return $this->render('pro/company.html.twig', [
-            'company' => $user->getCompany(),
+            'companies' => $companyRepository->findBy(['owner' => $user]),
         ]);
     }
 }

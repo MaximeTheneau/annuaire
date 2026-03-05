@@ -20,9 +20,13 @@ class UserCrudController extends AbstractCrudController
     {
         yield TextField::new('idHex', 'ID')->onlyOnIndex();
         yield EmailField::new('email');
-        yield ArrayField::new('roles');
-        yield BooleanField::new('isVerified', 'Vérifié');
-        yield BooleanField::new('twoFactorEnabled', '2FA');
-        yield TextField::new('lastLoginIp')->onlyOnIndex();
+        yield TextField::new('firstName', 'Prénom');
+        yield TextField::new('lastName', 'Nom');
+        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
+            yield TextField::new('company.name', 'Entreprise')->onlyOnIndex();
+            yield ArrayField::new('roles');
+            yield BooleanField::new('isVerified', 'Vérifié');
+            yield TextField::new('lastLoginIp')->onlyOnIndex();
+        }
     }
 }

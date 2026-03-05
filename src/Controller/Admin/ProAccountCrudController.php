@@ -2,7 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\SecurityToken;
 use App\Entity\User;
+use App\Mailer\AppMailer;
+use App\Service\SecurityTokenManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
@@ -15,13 +19,17 @@ use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class ProAccountCrudController extends AbstractCrudController
 {
     public function __construct(
         private readonly Security $security,
+        private readonly SecurityTokenManager $tokenManager,
+        private readonly AppMailer $mailer,
+        private readonly ParameterBagInterface $params,
     ) {}
 
     public static function getEntityFqcn(): string
@@ -44,8 +52,10 @@ class ProAccountCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
+        yield TextField::new('firstName', 'Prénom');
+        yield TextField::new('lastName', 'Nom');
         yield EmailField::new('email', 'Adresse e-mail');
-        yield BooleanField::new('twoFactorEnabled', 'Double authentification (2FA)');
+
     }
 
     public function createIndexQueryBuilder(
@@ -63,15 +73,61 @@ class ProAccountCrudController extends AbstractCrudController
         return $qb;
     }
 
-    public function edit(AdminContext $context)
+    private function assertIsCurrentUser(mixed $entity): void
     {
-        $entity = $context->getEntity()->getInstance();
         $currentUser = $this->security->getUser();
 
-        if ($entity instanceof User && $entity !== $currentUser) {
-            throw $this->createAccessDeniedException('Vous ne pouvez modifier que votre propre compte.');
+        if (!$entity instanceof User || !$currentUser instanceof User) {
+            throw $this->createAccessDeniedException();
         }
 
+        if (!$entity->getId() || $entity->getId() !== $currentUser->getId()) {
+            throw $this->createAccessDeniedException('Vous ne pouvez modifier que votre propre compte.');
+        }
+    }
+
+    public function edit(AdminContext $context)
+    {
+        $this->assertIsCurrentUser($context->getEntity()->getInstance());
+
         return parent::edit($context);
+    }
+
+    public function updateEntity(EntityManagerInterface $entityManager, mixed $entityInstance): void
+    {
+        $this->assertIsCurrentUser($entityInstance);
+
+        if (!$entityInstance instanceof User) {
+            parent::updateEntity($entityManager, $entityInstance);
+            return;
+        }
+
+        $uow = $entityManager->getUnitOfWork();
+        $uow->computeChangeSets();
+        $changeSet = $uow->getEntityChangeSet($entityInstance);
+
+        if (isset($changeSet['email'])) {
+            $originalEmail = $changeSet['email'][0];
+            $newEmail = $changeSet['email'][1];
+
+            // Revert email — le changement sera appliqué après confirmation
+            $entityInstance->setEmail($originalEmail);
+
+            $ttl = (int) $this->params->get('app.confirm_email_change_ttl_minutes');
+            $token = $this->tokenManager->createToken(
+                $entityInstance,
+                SecurityToken::TYPE_CONFIRM_EMAIL_CHANGE,
+                new \DateTimeImmutable(sprintf('+%d minutes', $ttl)),
+                ['new_email' => $newEmail]
+            );
+
+            $this->mailer->sendEmailChangeConfirmation($entityInstance, $newEmail, $token);
+            $this->addFlash('warning', sprintf(
+                'Un email de confirmation a été envoyé à %s. Cliquez sur le lien pour valider le changement.',
+                $newEmail
+            ));
+        }
+
+        parent::updateEntity($entityManager, $entityInstance);
     }
 }

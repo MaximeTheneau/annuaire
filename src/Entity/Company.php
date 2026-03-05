@@ -14,7 +14,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'uniq_company_siret', columns: ['siret'])]
 #[ORM\UniqueConstraint(name: 'uniq_company_name', columns: ['name'])]
 #[ORM\UniqueConstraint(name: 'uniq_company_slug', columns: ['slug'])]
-#[ORM\UniqueConstraint(name: 'uniq_company_owner', columns: ['owner_id'])]
 class Company extends BaseEntity
 {
     #[ORM\Column(type: 'bigint')]
@@ -30,7 +29,7 @@ class Company extends BaseEntity
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
-    #[ORM\OneToOne(inversedBy: 'company', targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
 
@@ -39,7 +38,6 @@ class Company extends BaseEntity
     #[ORM\JoinTable(name: 'company_category')]
     private Collection $categories;
 
-    #[Assert\NotNull(message: "L'adresse est obligatoire.")]
     #[ORM\ManyToOne(targetEntity: Address::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?Address $address = null;
@@ -74,8 +72,10 @@ class Company extends BaseEntity
     private ?File $imageFile = null;
     private bool $deleteImage = false;
 
+    #[Assert\NotBlank(message: "Sélectionnez une adresse dans la liste de suggestions.")]
     private ?string $placeId = null;
     private ?string $formattedAddress = null;
+    #[Assert\NotBlank(message: "La ville est obligatoire.")]
     private ?string $inputCityName = null;
     #[Assert\NotBlank(message: 'Le code postal est obligatoire.')]
     private ?string $inputPostalCode = null;
@@ -90,6 +90,47 @@ class Company extends BaseEntity
         $this->createdAt = new \DateTimeImmutable();
         $this->categories = new ArrayCollection();
         $this->interventionDepartments = new ArrayCollection();
+    }
+
+    public function __serialize(): array
+    {
+        return [
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'slug'        => $this->slug,
+            'siret'       => $this->siret,
+            'phone'       => $this->phone,
+            'website'     => $this->website,
+            'description' => $this->description,
+            'img'         => $this->img,
+            'srcset'      => $this->srcset,
+            'imgWidth'    => $this->imgWidth,
+            'imgHeight'   => $this->imgHeight,
+            'approved'    => $this->approved,
+            'createdAt'   => $this->createdAt,
+        ];
+        // imageFile (UploadedFile) et les champs transients exclus intentionnellement
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->id          = $data['id'];
+        $this->name        = $data['name'];
+        $this->slug        = $data['slug'];
+        $this->siret       = $data['siret'];
+        $this->phone       = $data['phone'];
+        $this->website     = $data['website'];
+        $this->description = $data['description'];
+        $this->img         = $data['img'];
+        $this->srcset      = $data['srcset'];
+        $this->imgWidth    = $data['imgWidth'];
+        $this->imgHeight   = $data['imgHeight'];
+        $this->approved    = $data['approved'];
+        $this->createdAt   = $data['createdAt'];
+        $this->imageFile               = null;
+        $this->deleteImage             = false;
+        $this->categories              = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->interventionDepartments = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     public function getSiret(): string

@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Company;
+use App\Entity\User;
 use App\Mailer\AppMailer;
 use App\Service\AddressResolverService;
 use App\Service\ImageOptimizer;
@@ -26,7 +27,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -40,7 +40,6 @@ class CompanyCrudController extends AbstractCrudController
         private readonly AddressResolverService $addressResolver,
         private readonly ImageOptimizer $imageOptimizer,
         private readonly Security $security,
-        private ParameterBagInterface $params,
     ) {}
 
     public static function getEntityFqcn(): string
@@ -90,7 +89,6 @@ class CompanyCrudController extends AbstractCrudController
             ->hideWhenCreating();
 
         yield TextField::new('siret', 'SIRET');
-        yield AssociationField::new('owner', 'Email')->onlyOnIndex();
         yield AssociationField::new('categories', 'Catégories')
             ->autocomplete()
             ->setCrudController(CategoryCrudController::class);
@@ -165,8 +163,9 @@ class CompanyCrudController extends AbstractCrudController
         $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
 
         if (!$this->isGranted('ROLE_ADMIN')) {
-            $qb->andWhere('entity.owner = :currentUser')
-                ->setParameter('currentUser', $this->security->getUser());
+            $qb->join('entity.owner', 'owner')
+                ->andWhere('owner.email = :email')
+                ->setParameter('email', $this->security->getUser()?->getUserIdentifier());
         }
 
         return $qb;
@@ -186,6 +185,10 @@ class CompanyCrudController extends AbstractCrudController
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
         if ($entityInstance instanceof Company) {
+            $user = $this->security->getUser();
+            if ($user instanceof User && $entityInstance->getOwner() === null) {
+                $entityInstance->setOwner($user);
+            }
             $this->resolveAndSetAddress($entityInstance);
             $entityInstance->initInterventionDepartmentFromCity();
             $this->handleImageUpload($entityInstance);
