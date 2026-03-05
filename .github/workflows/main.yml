@@ -16,6 +16,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
           script_stop: true
           script: |
             cd /var/www/html/annuaire
