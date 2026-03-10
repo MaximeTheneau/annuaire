@@ -118,7 +118,7 @@ logs-prod: ## [PROD] Logs en continu (SITE=...)
 	$(DOCKER_COMPOSE_PROD) logs -f $(PHP_SERVICE_PROD)
 
 bash-prod: check-env ## [PROD] Shell sh dans le conteneur PHP (SITE=...)
-	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) sh
+	$(DOCKER_COMPOSE_PROD) exec $(PHP_SERVICE_PROD) /bin/bash
 
 # ── Symfony PROD ──────────────────────────────────────────────────
 

@@ -60,7 +60,4 @@ WORKDIR /srv/app
 COPY . .
 COPY --from=vendor /srv/app/vendor ./vendor
 
-RUN APP_ENV=prod php -d memory_limit=512M bin/console assets:install --no-debug \
-    && APP_ENV=prod php -d memory_limit=512M bin/console importmap:install
-
-RUN mkdir -p var && chown -R www-data:www-data var public
+RUN mkdir -p var public/bundles public/assets && chown -R www-data:www-data var public
