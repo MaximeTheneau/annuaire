@@ -255,6 +255,7 @@ class AnnuaireApiController extends AbstractController
         return [
             'slug' => $company->getSlug(),
             'name' => $company->getName(),
+            'shortDescription' => $company->getShortDescription(),
             'phone' => $company->getPhone(),
             'img' => $company->getImg(),
             'srcset' => $company->getSrcset(),

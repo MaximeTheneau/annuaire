@@ -91,15 +91,17 @@ class AddressResolverService
 
         if (!$address instanceof Address) {
             $address = (new Address())
-                ->setFormatted($formattedAddress)
-                ->setGooglePlaceId($placeId)
-                ->setLat($lat ?: null)
-                ->setLng($lng ?: null)
-                ->setPostalCode($postalCode ?? '')
-                ->setCity($city);
+                ->setGooglePlaceId($placeId);
 
             $this->em->persist($address);
         }
+
+        $address
+            ->setFormatted($formattedAddress)
+            ->setLat($lat ?: null)
+            ->setLng($lng ?: null)
+            ->setPostalCode($postalCode ?? '')
+            ->setCity($city);
 
         return $address;
     }
