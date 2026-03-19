@@ -26,7 +26,14 @@ class Company extends BaseEntity
     #[ORM\Column(length: 255)]
     private string $website = '';
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
+    #[Assert\Length(
+        min: 500,
+        max: 1500,
+        minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.',
+    )]
+    #[ORM\Column(type: 'text', nullable: true, length: 15000)]
     private ?string $description = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -84,6 +91,14 @@ class Company extends BaseEntity
     private ?string $inputLat = null;
     private ?string $inputLng = null;
 
+    #[Assert\NotBlank(message: 'La description courte est obligatoire.')]
+    #[Assert\Length(
+        max: 135,
+        maxMessage: 'La description courte ne peut pas dépasser {{ limit }} caractères.',
+    )]
+    #[ORM\Column(length: 135, nullable: true)]
+    private ?string $shortDescription = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -121,6 +136,7 @@ class Company extends BaseEntity
         $this->phone       = $data['phone'];
         $this->website     = $data['website'];
         $this->description = $data['description'];
+        $this->shortDescription = $data['shortDescription'];
         $this->img         = $data['img'];
         $this->srcset      = $data['srcset'];
         $this->imgWidth    = $data['imgWidth'];
@@ -412,5 +428,17 @@ class Company extends BaseEntity
         $this->inputCityName        = $this->address->getCity()?->getName();
         $this->inputDepartmentName  = $this->address->getCity()?->getDepartment()?->getName();
         $this->inputDepartmentCode  = $this->address->getCity()?->getDepartment()?->getCode();
+    }
+
+    public function getShortDescription(): ?string
+    {
+        return $this->shortDescription;
+    }
+
+    public function setShortDescription(string $shortDescription): static
+    {
+        $this->shortDescription = $shortDescription;
+
+        return $this;
     }
 }

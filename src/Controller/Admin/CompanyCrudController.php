@@ -67,6 +67,9 @@ class CompanyCrudController extends AbstractCrudController
     {
         // ── Always visible ────────────────────────────────────────────────────
         yield TextField::new('name', 'Nom');
+        yield TextField::new('shortDescription', 'Description courte')
+            ->hideOnIndex()
+            ->setHelp('Maximum 135 caractères.');
 
         // ── Image — affichage index/détail ────────────────────────────────────
         yield ImageField::new('img', 'Logo')
@@ -144,7 +147,9 @@ class CompanyCrudController extends AbstractCrudController
         // ── Other fields ──────────────────────────────────────────────────────
         yield TextField::new('phone', 'Téléphone')->hideOnIndex();
         yield TextField::new('website', 'Site web')->hideOnIndex();
-        yield TextareaField::new('description', 'Description')->hideOnIndex();
+        yield TextareaField::new('description', 'Description')
+            ->hideOnIndex()
+            ->setHelp('Entre 500 et 1 500 caractères.');
 
         if ($this->isGranted('ROLE_ADMIN')) {
             yield BooleanField::new('approved', 'Approuvé');
