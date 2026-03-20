@@ -67,7 +67,8 @@ class CompanyRegistrationApiController extends AbstractController
         $siret       = preg_replace('/\s+/', '', trim((string) $request->request->get('siret', '')));
         $phone       = trim((string) $request->request->get('phone', ''));
         $website     = trim((string) $request->request->get('website', ''));
-        $description = strip_tags(trim((string) $request->request->get('description', '')));
+        $description      = strip_tags(trim((string) $request->request->get('description', '')));
+        $shortDescription = strip_tags(trim((string) $request->request->get('short_description', ''))) ?: null;
         $categoryIds = array_values(array_filter(array_map(
             fn(string $s) => trim($s),
             (array) $request->request->all('category_ids')
@@ -144,6 +145,11 @@ class CompanyRegistrationApiController extends AbstractController
         // Description
         if ($description !== '' && mb_strlen($description) > 5000) {
             $errors['description'][] = 'La description ne peut pas dépasser 5 000 caractères.';
+        }
+
+        // Description courte
+        if ($shortDescription !== null && mb_strlen($shortDescription) > 135) {
+            $errors['short_description'][] = 'La description courte ne peut pas dépasser 135 caractères.';
         }
 
         // Catégories
@@ -278,6 +284,10 @@ class CompanyRegistrationApiController extends AbstractController
             ->setOwner($user)
             ->setAddress($address)
             ->setApproved(null); // En attente de validation admin
+
+        if ($shortDescription !== null) {
+            $company->setShortDescription($shortDescription);
+        }
 
         foreach ($categories as $category) {
             $company->addCategory($category);
